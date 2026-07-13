@@ -1,9 +1,18 @@
 import type { LucideIcon } from 'lucide-react';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
 
 type Tone = 'emerald' | 'rose' | 'amber' | 'indigo';
+
+export interface KpiDelta {
+  /** Signed percent change (e.g., 12.3 or -7.5). Null means "no baseline". */
+  pct: number | null;
+  /** `positive` = green chip, `negative` = red chip. Lets callers say
+   *  "a drop in payouts is actually good" and flip the color. */
+  positive: 'up' | 'down';
+  label?: string;
+}
 
 interface Props {
   label: string;
@@ -11,7 +20,7 @@ interface Props {
   icon: LucideIcon;
   tone: Tone;
   hint?: string;
-  trend?: 'up' | 'down' | 'flat';
+  delta?: KpiDelta;
 }
 
 const TONE: Record<
@@ -44,14 +53,7 @@ const TONE: Record<
   },
 };
 
-export function KpiCard({
-  label,
-  value,
-  icon: Icon,
-  tone,
-  hint,
-  trend,
-}: Props) {
+export function KpiCard({ label, value, icon: Icon, tone, hint, delta }: Props) {
   const t = TONE[tone];
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,0.18)]">
@@ -63,10 +65,10 @@ export function KpiCard({
           <p className="mt-2 text-3xl font-black leading-none tracking-tight">
             {value}
           </p>
-          {hint && (
-            <div className="mt-3 flex items-center gap-1.5 text-xs">
-              <TrendIcon trend={trend} tone={tone} />
-              <span className="text-muted-foreground">{hint}</span>
+          {(delta || hint) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              {delta && <DeltaChip delta={delta} />}
+              {hint && <span className="text-muted-foreground">{hint}</span>}
             </div>
           )}
         </div>
@@ -90,22 +92,53 @@ export function KpiCard({
   );
 }
 
-function TrendIcon({ trend, tone }: { trend?: Props['trend']; tone: Tone }) {
-  if (trend === 'up') {
+function DeltaChip({ delta }: { delta: KpiDelta }) {
+  if (delta.pct === null) {
     return (
-      <ArrowUpRight
-        className={cn('size-3.5', TONE[tone].icon)}
-        strokeWidth={2.4}
-      />
+      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 ring-1 ring-inset ring-slate-200">
+        <Minus className="size-3" strokeWidth={2.5} />
+        Sin dato ayer
+      </span>
     );
   }
-  if (trend === 'down') {
-    return (
-      <ArrowDownRight
-        className={cn('size-3.5', TONE[tone].icon)}
-        strokeWidth={2.4}
-      />
-    );
-  }
-  return null;
+  const isUp = delta.pct > 0;
+  const isDown = delta.pct < 0;
+  const isFlat = delta.pct === 0;
+  const isGood = isFlat
+    ? false
+    : delta.positive === 'up'
+      ? isUp
+      : isDown;
+  const arrowClass = isFlat
+    ? 'text-slate-500'
+    : isGood
+      ? 'text-emerald-600'
+      : 'text-rose-600';
+  const chipClass = isFlat
+    ? 'bg-slate-100 text-slate-600 ring-slate-200'
+    : isGood
+      ? 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20'
+      : 'bg-rose-500/10 text-rose-700 ring-rose-500/20';
+  const abs = Math.abs(delta.pct);
+  const formatted = abs >= 100 ? abs.toFixed(0) : abs.toFixed(1);
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
+        chipClass,
+      )}
+    >
+      {isFlat ? (
+        <Minus className={cn('size-3', arrowClass)} strokeWidth={2.5} />
+      ) : isUp ? (
+        <ArrowUpRight className={cn('size-3', arrowClass)} strokeWidth={2.5} />
+      ) : (
+        <ArrowDownRight className={cn('size-3', arrowClass)} strokeWidth={2.5} />
+      )}
+      {formatted}%
+      {delta.label && (
+        <span className="font-normal opacity-80">{delta.label}</span>
+      )}
+    </span>
+  );
 }

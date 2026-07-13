@@ -11,6 +11,10 @@ import {
 
 import { formatCompact, formatCurrency } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/cn';
+import {
+  SegmentedControl,
+  type SegmentTab,
+} from '@/shared/ui/segmented-control';
 
 import type { MonthlySeriesPoint } from '@/features/home/types';
 
@@ -40,9 +44,9 @@ const PAID: SeriesStyle = {
   dot: 'bg-rose-500',
 };
 
-const TAB_ORDER: readonly { key: Series; label: string }[] = [
-  { key: 'billed', label: 'Facturado' },
-  { key: 'paid', label: 'Pagado' },
+const TABS: readonly SegmentTab<Series>[] = [
+  { key: 'billed', label: 'Facturado', tone: 'emerald' },
+  { key: 'paid', label: 'Pagado', tone: 'rose' },
   { key: 'both', label: 'Ambos' },
 ] as const;
 
@@ -69,19 +73,12 @@ export function MonthlyChart({ data }: { data: MonthlySeriesPoint[] }) {
           <SummaryLine series={series} totals={totals} />
         </div>
 
-        <div
-          role="tablist"
-          className="inline-flex rounded-lg border border-border/70 bg-muted p-1"
-        >
-          {TAB_ORDER.map((tab) => (
-            <SeriesTab
-              key={tab.key}
-              label={tab.label}
-              active={series === tab.key}
-              onClick={() => setSeries(tab.key)}
-            />
-          ))}
-        </div>
+        <SegmentedControl
+          ariaLabel="Serie del gráfico"
+          tabs={TABS}
+          value={series}
+          onChange={setSeries}
+        />
       </header>
 
       <div className="h-72 w-full">
@@ -256,29 +253,3 @@ function LegendDot({ color, label }: { color: string; label: string }) {
   );
 }
 
-function SeriesTab({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={cn(
-        'rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors',
-        active
-          ? 'bg-card text-foreground shadow-sm ring-1 ring-inset ring-border/60'
-          : 'text-muted-foreground hover:text-foreground',
-      )}
-    >
-      {label}
-    </button>
-  );
-}

@@ -1,7 +1,21 @@
-import { Calendar, CircleDollarSign, HandCoins, Users } from 'lucide-react';
+import {
+  CircleDollarSign,
+  MapPin,
+  Receipt,
+  Sparkles,
+  TrendingUp,
+  UserRound,
+} from 'lucide-react';
 
-import { KpiCard } from '@/features/home/components/kpi-card';
+import { GamesBreakdown } from '@/features/home/components/games-breakdown';
+import {
+  KpiCard,
+  type KpiDelta,
+} from '@/features/home/components/kpi-card';
 import { MonthlyChart } from '@/features/home/components/monthly-chart';
+import { PendingPayoutsCard } from '@/features/home/components/pending-payouts-card';
+import { TodayDrawsCard } from '@/features/home/components/today-draws-card';
+import { TopRankingCard } from '@/features/home/components/top-ranking-card';
 import { useDashboardSummary } from '@/features/home/hooks/use-dashboard-summary';
 import { useSession } from '@/features/auth/hooks/use-session';
 import { formatCurrency } from '@/shared/lib/format';
@@ -24,39 +38,83 @@ export function HomePage() {
               value={formatCurrency(data.billedToday)}
               icon={CircleDollarSign}
               tone="emerald"
-              hint="Ventas del día"
-              trend="up"
+              hint="vs ayer"
+              delta={pctDelta(data.billedToday, data.billedYesterday, 'up')}
             />
             <KpiCard
-              label="Pagado hoy"
-              value={formatCurrency(data.paidToday)}
-              icon={HandCoins}
-              tone="rose"
-              hint="Premios entregados"
-              trend="down"
+              label="Utilidad hoy"
+              value={formatCurrency(data.profitToday)}
+              icon={TrendingUp}
+              tone="indigo"
+              hint="Facturado − Pagado"
+              delta={pctDelta(data.profitToday, data.profitYesterday, 'up')}
+            />
+            <KpiCard
+              label="Boletos hoy"
+              value={data.ticketsToday.toLocaleString('es')}
+              icon={Receipt}
+              tone="amber"
+              hint={`Ticket promedio ${formatCurrency(data.averageTicketToday)}`}
+              delta={pctDelta(data.ticketsToday, data.ticketsYesterday, 'up')}
             />
             <KpiCard
               label="Venta semanal"
               value={formatCurrency(data.weeklyBilled)}
-              icon={Calendar}
-              tone="amber"
-              hint="Últimos 7 días"
-              trend="up"
-            />
-            <KpiCard
-              label="Total usuarios"
-              value={data.totalUsers.toString()}
-              icon={Users}
-              tone="indigo"
-              hint="Cuentas registradas"
+              icon={Sparkles}
+              tone="rose"
+              hint="Últimos 7 días vs anteriores"
+              delta={pctDelta(
+                data.weeklyBilled,
+                data.weeklyBilledPrev,
+                'up',
+              )}
             />
           </div>
 
           <MonthlyChart data={data.monthlySeries} />
+
+          <GamesBreakdown items={data.byGame} />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <TopRankingCard
+              title="Top vendedores (hoy)"
+              emptyLabel="Aún no hay ventas hoy."
+              items={data.topSellers}
+              icon={UserRound}
+              tone="indigo"
+            />
+            <TopRankingCard
+              title="Top puntos de venta (hoy)"
+              emptyLabel="Aún no hay ventas hoy."
+              items={data.topSalePoints}
+              icon={MapPin}
+              tone="emerald"
+            />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <TodayDrawsCard items={data.todayDraws} />
+            </div>
+            <PendingPayoutsCard data={data.pendingPayouts} />
+          </div>
         </>
       )}
     </div>
   );
+}
+
+function pctDelta(
+  current: number,
+  baseline: number,
+  positive: 'up' | 'down',
+): KpiDelta {
+  if (baseline === 0) {
+    // No baseline to compare against: hide the arrow, show "sin dato".
+    return { pct: null, positive };
+  }
+  const pct = ((current - baseline) / Math.abs(baseline)) * 100;
+  return { pct, positive };
 }
 
 function PageHeader({ name }: { name: string }) {
@@ -91,6 +149,10 @@ function HomeSkeleton() {
             className="h-32 animate-pulse rounded-2xl border border-border/70 bg-card"
           />
         ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="h-64 animate-pulse rounded-2xl border border-border/70 bg-card lg:col-span-2" />
+        <div className="h-64 animate-pulse rounded-2xl border border-border/70 bg-card" />
       </div>
       <div className="h-96 animate-pulse rounded-2xl border border-border/70 bg-card" />
     </div>
