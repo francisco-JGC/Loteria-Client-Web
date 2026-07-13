@@ -5,17 +5,18 @@
 export const APP_ROUTES = {
   root: '/',
   login: '/login',
-  dashboard: '/dashboard',
-  games: {
-    list: '/games',
-    detail: (id: string) => `/games/${id}`,
-  },
-  schedules: '/schedules',
-  drawResults: '/draw-results',
-  salePoints: '/sale-points',
-  users: '/users',
-  tickets: {
-    list: '/tickets',
-    detail: (id: string) => `/tickets/${id}`,
-  },
+
+  // Admin panel routes (sidebar order matches this file).
+  home: '/inicio',
+  sales: '/ventas',
+  branchTotals: '/totales-sucursal',
+  sellerReport: '/reporte-vendedor',
+  branchFlowReport: '/reporte-flujo-sucursal',
+  billing: '/facturacion',
+  winners: '/ganadores',
+  expenses: '/gastos',
+  movements: '/movimientos',
+  movementsCalc: '/calculo-movimientos',
+  users: '/usuarios',
+  latestResults: '/ultimos-resultados',
 } as const;

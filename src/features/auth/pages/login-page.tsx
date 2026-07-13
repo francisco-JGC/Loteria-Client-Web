@@ -2,7 +2,6 @@ import { type FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useLogin } from '@/features/auth/hooks/use-login';
-import { toApiError } from '@/shared/api/error-mapper';
 import { APP_ROUTES } from '@/shared/constants/routes';
 
 interface LocationState {
@@ -17,7 +16,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as LocationState | null)?.from?.pathname
-    ?? APP_ROUTES.dashboard;
+    ?? APP_ROUTES.home;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,7 +24,7 @@ export function LoginPage() {
     login.mutate(
       { username, password },
       {
-        onError: (raw) => setError(toApiError(raw).message),
+        onError: (apiError) => setError(apiError.message),
         onSuccess: () => navigate(from, { replace: true }),
       },
     );

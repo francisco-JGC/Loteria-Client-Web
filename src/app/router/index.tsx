@@ -9,16 +9,8 @@ import { APP_ROUTES } from '@/shared/constants/routes';
 /**
  * Router assembled with route objects rather than JSX for clarity.
  *
- * Layout:
- *   /login                    → LoginPage
- *   /*  (protected + admin)   → AdminShell
- *     /dashboard              → placeholder for now
- *     /games                  → placeholder
- *     /schedules              → placeholder
- *     /draw-results           → placeholder
- *     /sale-points            → placeholder
- *     /users                  → placeholder
- *     /tickets                → placeholder
+ * Every path here matches a sidebar item in `SidebarNav`. Real feature pages
+ * will progressively replace the `<Placeholder />` slots.
  */
 const router = createBrowserRouter([
   {
@@ -36,35 +28,55 @@ const router = createBrowserRouter([
             children: [
               {
                 path: APP_ROUTES.root,
-                element: <Navigate to={APP_ROUTES.dashboard} replace />,
+                element: <Navigate to={APP_ROUTES.home} replace />,
               },
               {
-                path: APP_ROUTES.dashboard,
-                element: <Placeholder title="Dashboard" />,
+                path: APP_ROUTES.home,
+                element: <Placeholder title="Inicio" />,
               },
               {
-                path: APP_ROUTES.games.list,
-                element: <Placeholder title="Juegos" />,
+                path: APP_ROUTES.sales,
+                element: <Placeholder title="Ventas" />,
               },
               {
-                path: APP_ROUTES.schedules,
-                element: <Placeholder title="Horarios" />,
+                path: APP_ROUTES.branchTotals,
+                element: <Placeholder title="Totales Por Sucursal" />,
               },
               {
-                path: APP_ROUTES.drawResults,
-                element: <Placeholder title="Resultados" />,
+                path: APP_ROUTES.sellerReport,
+                element: <Placeholder title="Reporte Diario Vendedor" />,
               },
               {
-                path: APP_ROUTES.salePoints,
-                element: <Placeholder title="Puestos de venta" />,
+                path: APP_ROUTES.branchFlowReport,
+                element: <Placeholder title="Reporte Flujo Sucursal" />,
+              },
+              {
+                path: APP_ROUTES.billing,
+                element: <Placeholder title="Facturación Por Apuestas" />,
+              },
+              {
+                path: APP_ROUTES.winners,
+                element: <Placeholder title="Ganadores" />,
+              },
+              {
+                path: APP_ROUTES.expenses,
+                element: <Placeholder title="Gastos" />,
+              },
+              {
+                path: APP_ROUTES.movements,
+                element: <Placeholder title="Movimientos" />,
+              },
+              {
+                path: APP_ROUTES.movementsCalc,
+                element: <Placeholder title="Cálculo Movimientos" />,
               },
               {
                 path: APP_ROUTES.users,
                 element: <Placeholder title="Usuarios" />,
               },
               {
-                path: APP_ROUTES.tickets.list,
-                element: <Placeholder title="Boletos" />,
+                path: APP_ROUTES.latestResults,
+                element: <Placeholder title="Últimos Resultados" />,
               },
             ],
           },
@@ -72,14 +84,17 @@ const router = createBrowserRouter([
       },
     ],
   },
-  { path: '*', element: <Navigate to={APP_ROUTES.dashboard} replace /> },
+  { path: '*', element: <Navigate to={APP_ROUTES.home} replace /> },
 ]);
 
 function Placeholder({ title }: { title: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border p-10 text-center">
+    <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
-      <p className="text-muted-foreground text-sm">Próximamente</p>
+      <p className="text-muted-foreground text-sm">
+        Próximamente — esta sección se conectará al backend en una siguiente
+        iteración.
+      </p>
     </div>
   );
 }
