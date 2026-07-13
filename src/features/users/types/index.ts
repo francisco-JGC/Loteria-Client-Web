@@ -5,6 +5,10 @@ export interface User {
   username: string;
   name: string;
   role: UserRole;
+  address: string | null;
+  nationalId: string | null;
+  paymentPercentage: number | null;
+  salePointId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,4 +32,8 @@ export interface CreateUserPayload {
   username: string;
   password: string;
   role: UserRole;
+  address?: string;
+  nationalId?: string;
+  paymentPercentage?: number;
+  salePointId?: string;
 }

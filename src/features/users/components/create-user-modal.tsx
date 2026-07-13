@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Eye, EyeOff, Loader2, Save } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Eye, EyeOff, Loader2, Save, Sparkles } from 'lucide-react';
 
+import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { useCreateUser } from '@/features/users/hooks/use-users';
 import { cn } from '@/shared/lib/cn';
+import { generatePassword } from '@/shared/lib/password';
 import { Modal } from '@/shared/ui/modal';
 
 import type { UserRole } from '@/features/users/types';
@@ -17,6 +19,10 @@ interface FormState {
   username: string;
   password: string;
   role: UserRole;
+  paymentPercentage: string; // held as string to allow empty input
+  salePointId: string;
+  address: string;
+  nationalId: string;
 }
 
 const EMPTY: FormState = {
@@ -24,14 +30,18 @@ const EMPTY: FormState = {
   username: '',
   password: '',
   role: 'seller',
+  paymentPercentage: '',
+  salePointId: '',
+  address: '',
+  nationalId: '',
 };
 
 export function CreateUserModal({ open, onClose }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [showPassword, setShowPassword] = useState(false);
+  const { data: salePoints, isLoading: loadingSalePoints } = useSalePoints();
   const { mutateAsync, isPending, error, reset } = useCreateUser();
 
-  // Reset the form + errors every time the modal opens.
   useEffect(() => {
     if (open) {
       setForm(EMPTY);
@@ -44,14 +54,33 @@ export function CreateUserModal({ open, onClose }: Props) {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const trimmed = {
-    name: form.name.trim(),
-    username: form.username.trim(),
-  };
+  const trimmed = useMemo(
+    () => ({
+      name: form.name.trim(),
+      username: form.username.trim(),
+      address: form.address.trim(),
+      nationalId: form.nationalId.trim(),
+    }),
+    [form.name, form.username, form.address, form.nationalId],
+  );
+
+  const paymentPercentage = parseInt(form.paymentPercentage, 10);
+  const paymentValid =
+    form.paymentPercentage === '' ||
+    (Number.isInteger(paymentPercentage) &&
+      paymentPercentage >= 0 &&
+      paymentPercentage <= 100);
+
   const isValid =
     trimmed.name.length > 0 &&
     trimmed.username.length >= 3 &&
-    form.password.length >= 6;
+    form.password.length >= 6 &&
+    paymentValid;
+
+  const handleGenerate = () => {
+    set('password', generatePassword());
+    setShowPassword(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +90,12 @@ export function CreateUserModal({ open, onClose }: Props) {
       username: trimmed.username,
       password: form.password,
       role: form.role,
+      address: trimmed.address || undefined,
+      nationalId: trimmed.nationalId || undefined,
+      paymentPercentage: form.paymentPercentage
+        ? paymentPercentage
+        : undefined,
+      salePointId: form.salePointId || undefined,
     });
     onClose();
   };
@@ -71,6 +106,7 @@ export function CreateUserModal({ open, onClose }: Props) {
       onClose={onClose}
       title="Nuevo usuario"
       description="Los usuarios con rol vendedor podrán iniciar sesión en la app móvil."
+      size="max-w-3xl"
       footer={
         <>
           <button
@@ -137,7 +173,7 @@ export function CreateUserModal({ open, onClose }: Props) {
 
         <Field
           label="Contraseña"
-          hint="Mínimo 6 caracteres"
+          hint="Mínimo 6 caracteres · usa el ícono para generar una"
           required
         >
           <div className="relative">
@@ -147,20 +183,32 @@ export function CreateUserModal({ open, onClose }: Props) {
               onChange={(e) => set('password', e.target.value)}
               placeholder="••••••••"
               maxLength={72}
-              className={cn(inputClass, 'pr-10')}
+              className={cn(inputClass, 'pr-20 font-mono')}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
-              className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
-            >
-              {showPassword ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </button>
+            <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center">
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
+                title={showPassword ? 'Ocultar' : 'Mostrar'}
+                className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerate}
+                aria-label="Generar contraseña"
+                title="Generar contraseña automática"
+                className="flex size-7 items-center justify-center rounded-md text-indigo-600 hover:bg-indigo-500/10"
+              >
+                <Sparkles className="size-4" strokeWidth={2.4} />
+              </button>
+            </div>
           </div>
         </Field>
 
@@ -170,15 +218,78 @@ export function CreateUserModal({ open, onClose }: Props) {
               active={form.role === 'seller'}
               onClick={() => set('role', 'seller')}
               title="Vendedor"
-              subtitle="Vende desde la app móvil"
+              subtitle="App móvil"
             />
             <RoleOption
               active={form.role === 'admin'}
               onClick={() => set('role', 'admin')}
               title="Administrador"
-              subtitle="Accede al panel web"
+              subtitle="Panel web"
             />
           </div>
+        </Field>
+
+        <Field
+          label="Porcentaje de pago"
+          hint="Comisión semanal sobre el total de ventas"
+        >
+          <div className="relative">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100}
+              value={form.paymentPercentage}
+              onChange={(e) => set('paymentPercentage', e.target.value)}
+              placeholder="ej. 13"
+              className={cn(inputClass, 'pr-8')}
+            />
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+              %
+            </span>
+          </div>
+        </Field>
+
+        <Field label="Sucursal">
+          <select
+            value={form.salePointId}
+            onChange={(e) => set('salePointId', e.target.value)}
+            className={inputClass}
+            disabled={loadingSalePoints}
+          >
+            <option value="">
+              {loadingSalePoints
+                ? 'Cargando…'
+                : 'Seleccione una sucursal'}
+            </option>
+            {salePoints?.map((sp) => (
+              <option key={sp.id} value={sp.id}>
+                {sp.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Cédula" hint="ej. 281-030590-0002P">
+          <input
+            type="text"
+            value={form.nationalId}
+            onChange={(e) => set('nationalId', e.target.value)}
+            placeholder="000-000000-0000X"
+            maxLength={20}
+            className={cn(inputClass, 'font-mono uppercase')}
+          />
+        </Field>
+
+        <Field label="Dirección">
+          <input
+            type="text"
+            value={form.address}
+            onChange={(e) => set('address', e.target.value)}
+            placeholder="Escriba la dirección del usuario"
+            maxLength={255}
+            className={inputClass}
+          />
         </Field>
 
         {error && (
@@ -192,7 +303,7 @@ export function CreateUserModal({ open, onClose }: Props) {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+  'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60';
 
 function Field({
   label,
@@ -212,7 +323,9 @@ function Field({
         {required && <span className="text-destructive">*</span>}
       </span>
       {children}
-      {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
+      {hint && (
+        <span className="block text-xs text-muted-foreground">{hint}</span>
+      )}
     </label>
   );
 }
@@ -233,7 +346,7 @@ function RoleOption({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex flex-col items-start rounded-lg border px-3 py-2.5 text-left transition',
+        'flex flex-col items-start rounded-lg border px-3 py-2 text-left transition',
         active
           ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
           : 'border-border bg-card hover:bg-secondary/60',

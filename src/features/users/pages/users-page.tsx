@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Search, Users } from 'lucide-react';
 
+import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { CreateUserModal } from '@/features/users/components/create-user-modal';
 import { useUsers } from '@/features/users/hooks/use-users';
 import { cn } from '@/shared/lib/cn';
@@ -9,6 +10,7 @@ import {
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
 
+import type { SalePoint } from '@/features/sale-points/types';
 import type { User, UserRole } from '@/features/users/types';
 
 type RoleFilter = 'all' | UserRole;
@@ -38,8 +40,16 @@ export function UsersPage() {
   );
 
   const { data, isLoading, error, isFetching } = useUsers(params);
+  const { data: salePoints } = useSalePoints();
   const total = data?.total ?? 0;
   const items = data?.items ?? [];
+
+  // O(1) lookup so each row doesn't scan the whole array.
+  const salePointById = useMemo(() => {
+    const map = new Map<string, SalePoint>();
+    for (const sp of salePoints ?? []) map.set(sp.id, sp);
+    return map;
+  }, [salePoints]);
   const rangeStart = total === 0 ? 0 : page * PAGE_SIZE + 1;
   const rangeEnd = Math.min(total, (page + 1) * PAGE_SIZE);
   const hasPrev = page > 0;
@@ -102,8 +112,11 @@ export function UsersPage() {
               <tr>
                 <th className="px-6 py-3">Nombre</th>
                 <th className="px-6 py-3">Usuario</th>
+                <th className="px-6 py-3">Sucursal</th>
+                <th className="px-6 py-3">Cédula</th>
+                <th className="px-6 py-3">Dirección</th>
+                <th className="px-6 py-3 text-right">% Pago</th>
                 <th className="px-6 py-3">Rol</th>
-                <th className="px-6 py-3">Creado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
@@ -114,7 +127,7 @@ export function UsersPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={7}
                     className="px-6 py-14 text-center text-sm text-muted-foreground"
                   >
                     {search || roleFilter !== 'all'
@@ -123,7 +136,17 @@ export function UsersPage() {
                   </td>
                 </tr>
               ) : (
-                items.map((user) => <UserRow key={user.id} user={user} />)
+                items.map((user) => (
+                  <UserRow
+                    key={user.id}
+                    user={user}
+                    salePointName={
+                      user.salePointId
+                        ? salePointById.get(user.salePointId)?.name ?? null
+                        : null
+                    }
+                  />
+                ))
               )}
             </tbody>
           </table>
@@ -183,13 +206,13 @@ export function UsersPage() {
   );
 }
 
-function UserRow({ user }: { user: User }) {
-  const created = new Intl.DateTimeFormat('es', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(user.createdAt));
-
+function UserRow({
+  user,
+  salePointName,
+}: {
+  user: User;
+  salePointName: string | null;
+}) {
   return (
     <tr className="hover:bg-slate-50/50">
       <td className="px-6 py-3.5">
@@ -201,12 +224,33 @@ function UserRow({ user }: { user: User }) {
         </div>
       </td>
       <td className="px-6 py-3.5 text-muted-foreground">@{user.username}</td>
+      <td className="px-6 py-3.5 text-foreground">
+        {salePointName ?? <Empty />}
+      </td>
+      <td className="px-6 py-3.5 font-mono text-xs text-muted-foreground">
+        {user.nationalId ?? <Empty />}
+      </td>
+      <td className="max-w-xs truncate px-6 py-3.5 text-muted-foreground">
+        {user.address ?? <Empty />}
+      </td>
+      <td className="px-6 py-3.5 text-right tabular-nums">
+        {user.paymentPercentage !== null ? (
+          <span className="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20">
+            {user.paymentPercentage}%
+          </span>
+        ) : (
+          <Empty />
+        )}
+      </td>
       <td className="px-6 py-3.5">
         <RoleBadge role={user.role} />
       </td>
-      <td className="px-6 py-3.5 text-muted-foreground">{created}</td>
     </tr>
   );
+}
+
+function Empty() {
+  return <span className="text-muted-foreground/50">—</span>;
 }
 
 function RoleBadge({ role }: { role: UserRole }) {
@@ -230,7 +274,7 @@ function RoleBadge({ role }: { role: UserRole }) {
 function SkeletonRow() {
   return (
     <tr>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
         <td key={i} className="px-6 py-4">
           <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
         </td>
