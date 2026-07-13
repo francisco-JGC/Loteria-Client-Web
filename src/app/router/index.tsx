@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/app/router/protected-route';
 import { RoleGate } from '@/app/router/role-gate';
 import { LoginPage } from '@/features/auth/pages/login-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { UsersPage } from '@/features/users/pages/users-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
 
 /**
@@ -73,7 +74,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.users,
-                element: <Placeholder title="Usuarios" />,
+                element: <UsersPage />,
               },
               {
                 path: APP_ROUTES.latestResults,
