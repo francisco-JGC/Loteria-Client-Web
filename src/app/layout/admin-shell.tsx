@@ -13,12 +13,12 @@ export function AdminShell() {
   const logout = useLogout();
   const navigate = useNavigate();
   const location = useLocation();
-  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
+  const isOpen = useSidebarStore((s) => s.isOpen);
   const openSidebar = useSidebarStore((s) => s.open);
   const closeSidebar = useSidebarStore((s) => s.close);
 
-  // Close the mobile drawer whenever the route changes so a tap on a nav
-  // item both navigates and hides the overlay.
+  // Close the drawer whenever the route changes so tapping a nav item both
+  // navigates and hides the overlay.
   useEffect(() => {
     closeSidebar();
   }, [location.pathname, closeSidebar]);
@@ -29,23 +29,24 @@ export function AdminShell() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Backdrop (mobile only) */}
-      {mobileOpen && (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Topbar onOpenSidebar={openSidebar} />
+
+      {/* Backdrop */}
+      {isOpen && (
         <button
           type="button"
           aria-label="Cerrar menú"
           onClick={closeSidebar}
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-black/50"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar drawer (same behavior at every breakpoint) */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-border bg-card transition-transform duration-200',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          'md:sticky md:top-0 md:h-screen md:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         <SidebarHeader onClose={closeSidebar} />
@@ -61,14 +62,31 @@ export function AdminShell() {
         />
       </aside>
 
-      {/* Main column */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MobileTopbar onOpenSidebar={openSidebar} />
-        <main className="min-w-0 flex-1 overflow-x-hidden p-6">
-          <Outlet />
-        </main>
-      </div>
+      <main className="min-w-0 flex-1 overflow-x-hidden p-6">
+        <Outlet />
+      </main>
     </div>
+  );
+}
+
+function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+  return (
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4">
+      <button
+        type="button"
+        onClick={onOpenSidebar}
+        className="flex size-9 items-center justify-center rounded-md text-foreground hover:bg-secondary"
+        aria-label="Abrir menú"
+      >
+        <Menu className="size-5" />
+      </button>
+      <div className="flex items-center gap-2">
+        <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <Ticket className="size-4" strokeWidth={2.4} />
+        </div>
+        <span className="text-sm font-black tracking-tight">Lotería</span>
+      </div>
+    </header>
   );
 }
 
@@ -89,7 +107,7 @@ function SidebarHeader({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         onClick={onClose}
-        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground md:hidden"
+        className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
         aria-label="Cerrar menú"
         title="Cerrar menú"
       >
@@ -131,26 +149,5 @@ function SidebarFooter({
         </button>
       </div>
     </div>
-  );
-}
-
-function MobileTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
-  return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:hidden">
-      <button
-        type="button"
-        onClick={onOpenSidebar}
-        className="flex size-9 items-center justify-center rounded-md text-foreground hover:bg-secondary"
-        aria-label="Abrir menú"
-      >
-        <Menu className="size-5" />
-      </button>
-      <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Ticket className="size-4" strokeWidth={2.4} />
-        </div>
-        <span className="text-sm font-black tracking-tight">Lotería</span>
-      </div>
-    </header>
   );
 }
