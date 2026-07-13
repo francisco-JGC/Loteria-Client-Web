@@ -60,11 +60,11 @@ const NAV_ITEMS: readonly NavItem[] = [
   { to: APP_ROUTES.latestResults, label: 'Últimos Resultados', icon: History },
 ] as const;
 
-export function SidebarNav({ collapsed }: { collapsed: boolean }) {
+export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className={cn('flex flex-col gap-1', collapsed ? 'p-2' : 'p-3')}>
+    <nav className="flex flex-col gap-1 p-3">
       {NAV_ITEMS.map((item) => (
-        <SidebarNavItem key={item.to} item={item} collapsed={collapsed} />
+        <SidebarNavItem key={item.to} item={item} onNavigate={onNavigate} />
       ))}
     </nav>
   );
@@ -72,23 +72,20 @@ export function SidebarNav({ collapsed }: { collapsed: boolean }) {
 
 function SidebarNavItem({
   item,
-  collapsed,
+  onNavigate,
 }: {
   item: NavItem;
-  collapsed: boolean;
+  onNavigate?: () => void;
 }) {
   const Icon = item.icon;
   return (
     <NavLink
       to={item.to}
       end
-      title={collapsed ? item.label : undefined}
+      onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'group relative flex items-center gap-3 rounded-lg text-sm transition-all',
-          collapsed
-            ? 'justify-center px-0 py-2.5'
-            : 'px-3 py-2.5',
+          'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all',
           isActive
             ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
             : 'text-foreground/75 hover:bg-secondary hover:text-foreground',
@@ -106,16 +103,11 @@ function SidebarNavItem({
             )}
             strokeWidth={isActive ? 2.4 : 2}
           />
-          {!collapsed && (
-            <span
-              className={cn(
-                'truncate font-medium',
-                isActive && 'font-semibold',
-              )}
-            >
-              {item.label}
-            </span>
-          )}
+          <span
+            className={cn('truncate font-medium', isActive && 'font-semibold')}
+          >
+            {item.label}
+          </span>
         </>
       )}
     </NavLink>

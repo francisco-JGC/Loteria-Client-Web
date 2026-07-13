@@ -1,26 +1,25 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface SidebarState {
-  collapsed: boolean;
+  mobileOpen: boolean;
+  open: () => void;
+  close: () => void;
   toggle: () => void;
-  setCollapsed: (value: boolean) => void;
 }
 
 /**
- * UI state for the admin sidebar (expanded vs collapsed). Persisted so the
- * user's preference survives page reloads.
+ * UI state for the responsive sidebar drawer.
+ *
+ * - Desktop (md+): the sidebar is always visible; `mobileOpen` is ignored.
+ * - Mobile (< md): the sidebar is hidden off-canvas by default; setting
+ *   `mobileOpen` to true slides it in as an overlay.
+ *
+ * Not persisted — the drawer should always start closed on load so the user
+ * lands on content, not on the menu.
  */
-export const useSidebarStore = create<SidebarState>()(
-  persist(
-    (set) => ({
-      collapsed: false,
-      toggle: () => set((s) => ({ collapsed: !s.collapsed })),
-      setCollapsed: (value) => set({ collapsed: value }),
-    }),
-    {
-      name: 'loteria.sidebar',
-      storage: createJSONStorage(() => localStorage),
-    },
-  ),
-);
+export const useSidebarStore = create<SidebarState>((set) => ({
+  mobileOpen: false,
+  open: () => set({ mobileOpen: true }),
+  close: () => set({ mobileOpen: false }),
+  toggle: () => set((s) => ({ mobileOpen: !s.mobileOpen })),
+}));
