@@ -4,6 +4,7 @@ import { AdminShell } from '@/app/layout/admin-shell';
 import { ProtectedRoute } from '@/app/router/protected-route';
 import { RoleGate } from '@/app/router/role-gate';
 import { LoginPage } from '@/features/auth/pages/login-page';
+import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
 import { UsersPage } from '@/features/users/pages/users-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
@@ -75,6 +76,10 @@ const router = createBrowserRouter([
               {
                 path: APP_ROUTES.users,
                 element: <UsersPage />,
+              },
+              {
+                path: APP_ROUTES.draws,
+                element: <DrawsPage />,
               },
               {
                 path: APP_ROUTES.latestResults,

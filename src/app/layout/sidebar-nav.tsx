@@ -3,6 +3,7 @@ import {
   BarChart3,
   Calculator,
   CircleDollarSign,
+  Dices,
   History,
   Home,
   PlusSquare,
@@ -57,6 +58,7 @@ const NAV_ITEMS: readonly NavItem[] = [
     icon: Calculator,
   },
   { to: APP_ROUTES.users, label: 'Usuarios', icon: User },
+  { to: APP_ROUTES.draws, label: 'Sorteos', icon: Dices },
   { to: APP_ROUTES.latestResults, label: 'Últimos Resultados', icon: History },
 ] as const;
 
