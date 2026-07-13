@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 import {
   createUser,
@@ -46,8 +47,14 @@ export function useCreateUser() {
         throw toApiError(error);
       }
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
+      toast.success(`Usuario "${user.name}" creado`);
       qc.invalidateQueries({ queryKey: usersQueryKeys.all });
+    },
+    onError: (error) => {
+      toast.error('No se pudo crear el usuario', {
+        description: error.message,
+      });
     },
   });
 }
@@ -57,7 +64,16 @@ export function useUpdateUser() {
   return useMutation<
     User,
     ApiError,
-    { id: string; payload: UpdateUserPayload }
+    {
+      id: string;
+      payload: UpdateUserPayload;
+      /**
+       * Optional message to override the default toast. Used by the details
+       * modal to say "Acceso bloqueado" / "Cambios guardados" depending on
+       * which action triggered the mutation.
+       */
+      successMessage?: string;
+    }
   >({
     mutationFn: async ({ id, payload }) => {
       try {
@@ -66,8 +82,14 @@ export function useUpdateUser() {
         throw toApiError(error);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_user, variables) => {
+      toast.success(variables.successMessage ?? 'Cambios guardados');
       qc.invalidateQueries({ queryKey: usersQueryKeys.all });
+    },
+    onError: (error) => {
+      toast.error('No se pudieron guardar los cambios', {
+        description: error.message,
+      });
     },
   });
 }

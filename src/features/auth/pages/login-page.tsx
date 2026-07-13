@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useLogin } from '@/features/auth/hooks/use-login';
@@ -77,8 +78,9 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={login.isPending}
-          className="w-full h-10 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition"
+          className="inline-flex w-full h-10 items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 disabled:opacity-50 transition"
         >
+          {login.isPending && <Loader2 className="size-4 animate-spin" />}
           {login.isPending ? 'Ingresando…' : 'Ingresar'}
         </button>
       </form>

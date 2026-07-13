@@ -110,6 +110,7 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
         ),
         salePointId: diffNullable(form.salePointId, user.salePointId),
       },
+      successMessage: 'Usuario actualizado',
     });
     setEditing(false);
     setForm((prev) => (prev ? { ...prev, password: '' } : prev));
@@ -118,9 +119,13 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
 
   const handleToggleAccess = async () => {
     if (isPending) return;
+    const next = !user.isActive;
     await mutateAsync({
       id: user.id,
-      payload: { isActive: !user.isActive },
+      payload: { isActive: next },
+      successMessage: next
+        ? `Acceso reactivado para ${user.name}`
+        : `Acceso bloqueado para ${user.name}`,
     });
   };
 
@@ -183,17 +188,14 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
                 isPending && 'cursor-not-allowed opacity-60',
               )}
             >
-              {user.isActive ? (
-                <>
-                  <Lock className="size-4" strokeWidth={2.4} />
-                  Bloquear acceso
-                </>
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : user.isActive ? (
+                <Lock className="size-4" strokeWidth={2.4} />
               ) : (
-                <>
-                  <Unlock className="size-4" strokeWidth={2.4} />
-                  Reactivar acceso
-                </>
+                <Unlock className="size-4" strokeWidth={2.4} />
               )}
+              {user.isActive ? 'Bloquear acceso' : 'Reactivar acceso'}
             </button>
             <button
               type="button"

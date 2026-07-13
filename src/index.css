@@ -55,3 +55,13 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Global top progress bar (see shared/ui/global-progress.tsx). */
+@keyframes progress-slide {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
