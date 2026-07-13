@@ -1,12 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createUser, listUsers } from '@/features/users/api/users.api';
+import {
+  createUser,
+  listUsers,
+  updateUser,
+} from '@/features/users/api/users.api';
 import { toApiError } from '@/shared/api/error-mapper';
 
 import type {
   CreateUserPayload,
   ListUsersParams,
   ListUsersResponse,
+  UpdateUserPayload,
   User,
 } from '@/features/users/types';
 import type { ApiError } from '@/shared/types/api';
@@ -27,7 +32,6 @@ export function useUsers(params: ListUsersParams) {
         throw toApiError(error);
       }
     },
-    // Keep previous data visible while paginating so the table doesn't blink.
     placeholderData: (prev) => prev,
   });
 }
@@ -43,8 +47,26 @@ export function useCreateUser() {
       }
     },
     onSuccess: () => {
-      // Refetch every users list currently cached — any filter/page can
-      // include the new user.
+      qc.invalidateQueries({ queryKey: usersQueryKeys.all });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const qc = useQueryClient();
+  return useMutation<
+    User,
+    ApiError,
+    { id: string; payload: UpdateUserPayload }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      try {
+        return await updateUser(id, payload);
+      } catch (error) {
+        throw toApiError(error);
+      }
+    },
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: usersQueryKeys.all });
     },
   });

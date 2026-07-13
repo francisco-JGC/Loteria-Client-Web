@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, Search, Users } from 'lucide-react';
 
 import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { CreateUserModal } from '@/features/users/components/create-user-modal';
+import { UserDetailsModal } from '@/features/users/components/user-details-modal';
 import { useUsers } from '@/features/users/hooks/use-users';
 import { cn } from '@/shared/lib/cn';
 import {
@@ -28,6 +29,7 @@ export function UsersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const params = useMemo(
     () => ({
@@ -50,6 +52,13 @@ export function UsersPage() {
     for (const sp of salePoints ?? []) map.set(sp.id, sp);
     return map;
   }, [salePoints]);
+
+  // Selected user is always resolved from the live list so any mutation
+  // (edit, toggle access) refreshes the modal without extra plumbing.
+  const selectedUser = useMemo(
+    () => items.find((u) => u.id === selectedId) ?? null,
+    [items, selectedId],
+  );
   const rangeStart = total === 0 ? 0 : page * PAGE_SIZE + 1;
   const rangeEnd = Math.min(total, (page + 1) * PAGE_SIZE);
   const hasPrev = page > 0;
@@ -145,6 +154,7 @@ export function UsersPage() {
                         ? salePointById.get(user.salePointId)?.name ?? null
                         : null
                     }
+                    onClick={() => setSelectedId(user.id)}
                   />
                 ))
               )}
@@ -202,6 +212,12 @@ export function UsersPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       />
+
+      <UserDetailsModal
+        open={selectedUser !== null}
+        onClose={() => setSelectedId(null)}
+        user={selectedUser}
+      />
     </div>
   );
 }
@@ -209,18 +225,41 @@ export function UsersPage() {
 function UserRow({
   user,
   salePointName,
+  onClick,
 }: {
   user: User;
   salePointName: string | null;
+  onClick: () => void;
 }) {
   return (
-    <tr className="hover:bg-slate-50/50">
+    <tr
+      onClick={onClick}
+      className={cn(
+        'cursor-pointer transition hover:bg-slate-50/60',
+        !user.isActive && 'opacity-60',
+      )}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
       <td className="px-6 py-3.5">
         <div className="flex items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-bold text-white">
             {user.name.slice(0, 1).toUpperCase()}
           </span>
-          <span className="font-semibold text-foreground">{user.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-foreground">{user.name}</span>
+            {!user.isActive && (
+              <span className="inline-flex items-center rounded-md bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-500/20">
+                Bloqueado
+              </span>
+            )}
+          </div>
         </div>
       </td>
       <td className="px-6 py-3.5 text-muted-foreground">@{user.username}</td>
