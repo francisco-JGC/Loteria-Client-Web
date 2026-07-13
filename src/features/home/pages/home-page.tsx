@@ -25,7 +25,7 @@ export function HomePage() {
   const session = useSession();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6">
       <PageHeader name={session?.user.name ?? ''} />
 
       {isLoading && <HomeSkeleton />}

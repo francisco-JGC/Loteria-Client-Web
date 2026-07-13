@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, Ticket, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Ticket, X } from 'lucide-react';
 
 import { SidebarNav } from '@/app/layout/sidebar-nav';
 import { useSidebarStore } from '@/app/layout/sidebar-store';
@@ -30,7 +30,12 @@ export function AdminShell() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Topbar onOpenSidebar={openSidebar} />
+      <Topbar
+        onOpenSidebar={openSidebar}
+        name={session?.user.name ?? '—'}
+        role={session?.user.role ?? ''}
+        onLogout={handleLogout}
+      />
 
       {/* Backdrop */}
       {isOpen && (
@@ -62,31 +67,136 @@ export function AdminShell() {
         />
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-x-hidden p-6">
+      <main className="min-w-0 flex-1 overflow-x-hidden px-8 py-6">
         <Outlet />
       </main>
     </div>
   );
 }
 
-function Topbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+function Topbar({
+  onOpenSidebar,
+  name,
+  role,
+  onLogout,
+}: {
+  onOpenSidebar: () => void;
+  name: string;
+  role: string;
+  onLogout: () => void;
+}) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-card px-4">
-      <button
-        type="button"
-        onClick={onOpenSidebar}
-        className="flex size-9 items-center justify-center rounded-md text-foreground hover:bg-secondary"
-        aria-label="Abrir menú"
-      >
-        <Menu className="size-5" />
-      </button>
-      <div className="flex items-center gap-2">
-        <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Ticket className="size-4" strokeWidth={2.4} />
+    <header className="sticky top-0 z-20 border-b border-border bg-card">
+      <div className="flex h-14 items-center gap-3 px-8">
+        <button
+          type="button"
+          onClick={onOpenSidebar}
+          className="flex size-9 items-center justify-center rounded-md text-foreground hover:bg-secondary"
+          aria-label="Abrir menú"
+        >
+          <Menu className="size-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Ticket className="size-4" strokeWidth={2.4} />
+          </div>
+          <span className="text-sm font-black tracking-tight">Lotería</span>
         </div>
-        <span className="text-sm font-black tracking-tight">Lotería</span>
+
+        <UserMenu name={name} role={role} onLogout={onLogout} />
       </div>
     </header>
+  );
+}
+
+function UserMenu({
+  name,
+  role,
+  onLogout,
+}: {
+  name: string;
+  role: string;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative ml-auto">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={cn(
+          'flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition',
+          open ? 'bg-secondary' : 'hover:bg-secondary/70',
+        )}
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-xs font-bold text-white shadow-sm">
+          {name.slice(0, 1).toUpperCase()}
+        </span>
+        <span className="hidden min-w-0 leading-tight sm:block">
+          <span className="block truncate text-sm font-semibold text-foreground">
+            {name}
+          </span>
+          <span className="block truncate text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+            {role}
+          </span>
+        </span>
+        <ChevronDown
+          className={cn(
+            'size-4 text-muted-foreground transition-transform',
+            open && 'rotate-180',
+          )}
+          strokeWidth={2.4}
+        />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-[0_16px_40px_-16px_rgba(15,23,42,0.24)]"
+        >
+          <div className="border-b border-border px-3 py-2.5">
+            <div className="truncate text-sm font-semibold">{name}</div>
+            <div className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+              {role}
+            </div>
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-foreground hover:bg-secondary"
+          >
+            <LogOut className="size-4 text-muted-foreground" />
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
