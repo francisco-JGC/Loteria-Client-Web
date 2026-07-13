@@ -4,6 +4,7 @@ import { AdminShell } from '@/app/layout/admin-shell';
 import { ProtectedRoute } from '@/app/router/protected-route';
 import { RoleGate } from '@/app/router/role-gate';
 import { LoginPage } from '@/features/auth/pages/login-page';
+import { HomePage } from '@/features/home/pages/home-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
 
 /**
@@ -32,7 +33,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.home,
-                element: <Placeholder title="Inicio" />,
+                element: <HomePage />,
               },
               {
                 path: APP_ROUTES.sales,
