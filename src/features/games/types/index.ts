@@ -31,3 +31,17 @@ export interface DrawSchedule {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateSchedulePayload {
+  dayOfWeek: number | null;
+  drawTime: string;
+  cutoffMinutes?: number;
+}
+
+/** Any subset of fields; only the ones sent are updated. */
+export interface UpdateSchedulePayload {
+  dayOfWeek?: number | null;
+  drawTime?: string;
+  cutoffMinutes?: number;
+  isActive?: boolean;
+}
