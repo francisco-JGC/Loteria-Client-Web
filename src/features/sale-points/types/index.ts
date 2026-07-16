@@ -13,3 +13,9 @@ export interface CreateSalePointPayload {
   code: string;
   ownerPartnerId?: string;
 }
+
+export interface UpdateSalePointPayload {
+  name?: string;
+  code?: string;
+  ownerPartnerId?: string | null;
+}

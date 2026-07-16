@@ -5,12 +5,14 @@ import {
   createSalePoint,
   listSalePoints,
   toggleSalePoint,
+  updateSalePoint,
 } from '@/features/sale-points/api/sale-points.api';
 import { toApiError } from '@/shared/api/error-mapper';
 
 import type {
   CreateSalePointPayload,
   SalePoint,
+  UpdateSalePointPayload,
 } from '@/features/sale-points/types';
 import type { ApiError } from '@/shared/types/api';
 
@@ -77,6 +79,32 @@ export function useToggleSalePoint() {
           ? `Sucursal "${sp.name}" activada`
           : `Sucursal "${sp.name}" desactivada`,
       );
+      qc.invalidateQueries({ queryKey: salePointsQueryKeys.all });
+    },
+    onError: (error) => {
+      toast.error('No se pudo actualizar la sucursal', {
+        description: error.message,
+      });
+    },
+  });
+}
+
+export function useUpdateSalePoint() {
+  const qc = useQueryClient();
+  return useMutation<
+    SalePoint,
+    ApiError,
+    { id: string; payload: UpdateSalePointPayload }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      try {
+        return await updateSalePoint(id, payload);
+      } catch (error) {
+        throw toApiError(error);
+      }
+    },
+    onSuccess: (sp) => {
+      toast.success(`Sucursal "${sp.name}" actualizada`);
       qc.invalidateQueries({ queryKey: salePointsQueryKeys.all });
     },
     onError: (error) => {

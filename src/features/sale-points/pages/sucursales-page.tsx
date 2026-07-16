@@ -3,6 +3,7 @@ import { Handshake, Loader2, MapPin, Plus, Search } from 'lucide-react';
 
 import { useSession } from '@/features/auth/hooks/use-session';
 import { CreateSalePointModal } from '@/features/sale-points/components/create-sale-point-modal';
+import { SalePointDetailsModal } from '@/features/sale-points/components/sale-point-details-modal';
 import {
   useSalePoints,
   useToggleSalePoint,
@@ -29,6 +30,7 @@ export function SucursalesPage() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [selected, setSelected] = useState<SalePoint | null>(null);
 
   const session = useSession();
   const isAdmin = session?.user.role === 'admin';
@@ -167,6 +169,7 @@ export function SucursalesPage() {
                     onToggle={(next) =>
                       toggle.mutate({ id: sp.id, active: next })
                     }
+                    onOpen={() => setSelected(sp)}
                   />
                 ))
               )}
@@ -181,6 +184,11 @@ export function SucursalesPage() {
           onClose={() => setModalOpen(false)}
         />
       )}
+      <SalePointDetailsModal
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        salePoint={selected}
+      />
     </div>
   );
 }
@@ -191,17 +199,20 @@ function SucursalRow({
   showPartner,
   isToggling,
   onToggle,
+  onOpen,
 }: {
   salePoint: SalePoint;
   partnerName: string | null;
   showPartner: boolean;
   isToggling: boolean;
   onToggle: (next: boolean) => void;
+  onOpen: () => void;
 }) {
   return (
     <tr
+      onClick={onOpen}
       className={cn(
-        'transition',
+        'cursor-pointer transition',
         salePoint.isActive
           ? 'hover:bg-slate-50/60'
           : 'opacity-60 hover:bg-slate-50/40',
@@ -236,7 +247,10 @@ function SucursalRow({
           )}
         </td>
       )}
-      <td className="px-6 py-3.5 text-right">
+      <td
+        className="px-6 py-3.5 text-right"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Toggle
           checked={salePoint.isActive}
           onChange={onToggle}
