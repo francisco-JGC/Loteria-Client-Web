@@ -100,6 +100,9 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
 
   const handleSave = async () => {
     if (!isValid || isPending) return;
+    // Non-sellers cannot hold a salePointId nor a paymentPercentage. If the
+    // role is (or is becoming) non-seller, force those to null in the diff.
+    const isSeller = form.role === UserRole.SELLER;
     await mutateAsync({
       id: user.id,
       payload: {
@@ -109,11 +112,16 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
         phone: diffNullable(trimmed.phone, user.phone),
         address: diffNullable(trimmed.address, user.address),
         nationalId: diffNullable(trimmed.nationalId, user.nationalId),
-        paymentPercentage: diffNullableNumber(
-          form.paymentPercentage,
-          user.paymentPercentage,
-        ),
-        salePointId: diffNullable(form.salePointId, user.salePointId),
+        paymentPercentage: isSeller
+          ? diffNullableNumber(form.paymentPercentage, user.paymentPercentage)
+          : user.paymentPercentage !== null
+            ? null
+            : undefined,
+        salePointId: isSeller
+          ? diffNullable(form.salePointId, user.salePointId)
+          : user.salePointId !== null
+            ? null
+            : undefined,
       },
       successMessage: 'Usuario actualizado',
     });
@@ -460,41 +468,45 @@ function EditForm({
         </div>
       </Field>
 
-      <Field
-        label="Porcentaje de pago"
-        hint="Comisión semanal sobre el total de ventas"
-      >
-        <div className="relative">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={100}
-            value={form.paymentPercentage}
-            onChange={(e) => onChange('paymentPercentage', e.target.value)}
-            placeholder="ej. 13"
-            className={cn(inputClass, 'pr-8')}
-          />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-            %
-          </span>
-        </div>
-      </Field>
+      {form.role === UserRole.SELLER && (
+        <>
+          <Field
+            label="Porcentaje de pago"
+            hint="Comisión semanal sobre el total de ventas"
+          >
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                value={form.paymentPercentage}
+                onChange={(e) => onChange('paymentPercentage', e.target.value)}
+                placeholder="ej. 13"
+                className={cn(inputClass, 'pr-8')}
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                %
+              </span>
+            </div>
+          </Field>
 
-      <Field label="Sucursal">
-        <select
-          value={form.salePointId}
-          onChange={(e) => onChange('salePointId', e.target.value)}
-          className={inputClass}
-        >
-          <option value="">Sin sucursal</option>
-          {salePoints.map((sp) => (
-            <option key={sp.id} value={sp.id}>
-              {sp.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+          <Field label="Sucursal">
+            <select
+              value={form.salePointId}
+              onChange={(e) => onChange('salePointId', e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Sin sucursal</option>
+              {salePoints.map((sp) => (
+                <option key={sp.id} value={sp.id}>
+                  {sp.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </>
+      )}
 
       <Field label="Cédula">
         <input
