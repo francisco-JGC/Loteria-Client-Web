@@ -9,6 +9,7 @@ import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
 import { SucursalesPage } from '@/features/sale-points/pages/sucursales-page';
+import { SalesPage } from '@/features/tickets/pages/sales-page';
 import { UsersPage } from '@/features/users/pages/users-page';
 import { WinnersPage } from '@/features/winners/pages/winners-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
@@ -43,7 +44,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.sales,
-                element: <Placeholder title="Ventas" />,
+                element: <SalesPage />,
               },
               {
                 path: APP_ROUTES.branchTotals,
