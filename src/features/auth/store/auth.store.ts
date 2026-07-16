@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+import { queryClient } from '@/app/providers/query-provider';
+
 import type { AuthSession } from '@/features/auth/types';
 
 interface AuthState {
@@ -35,7 +37,12 @@ export function getAuthToken(): string | null {
   return useAuthStore.getState().session?.token ?? null;
 }
 
-/** Force a logout — used by 401 interceptor to clear the invalid session. */
+/**
+ * Force a logout — used by 401 interceptor to clear the invalid session.
+ * Also wipes the TanStack Query cache so the next user (or the next login)
+ * doesn't see the previous session's data during the stale window.
+ */
 export function forceLogout(): void {
   useAuthStore.getState().clearSession();
+  queryClient.clear();
 }

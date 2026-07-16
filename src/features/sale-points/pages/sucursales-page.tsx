@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Handshake, Loader2, MapPin, Plus, Search } from 'lucide-react';
 
+import { useSession } from '@/features/auth/hooks/use-session';
 import { CreateSalePointModal } from '@/features/sale-points/components/create-sale-point-modal';
 import {
   useSalePoints,
@@ -29,16 +30,19 @@ export function SucursalesPage() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
 
+  const session = useSession();
+  const isAdmin = session?.user.role === 'admin';
+
   const { data, isLoading, error } = useSalePoints();
   const toggle = useToggleSalePoint();
 
-  // Partners list — used to resolve names for the "Socio" column. Owner
-  // (admin) is the caller so `useUsers` returns everything relevant.
-  const { data: partnersPage } = useUsers({
-    role: 'partner',
-    limit: 100,
-    offset: 0,
-  });
+  // Partners list only makes sense for the admin view (to resolve names
+  // for the "Socio" column). Partners see only their own sucursales,
+  // so the extra fetch would return nothing useful and hits a role-gated
+  // endpoint they can still call but that adds no value.
+  const { data: partnersPage } = useUsers(
+    { role: 'partner', limit: 100, offset: 0 },
+  );
   const partnerById = useMemo(() => {
     const map = new Map<string, User>();
     for (const p of partnersPage?.items ?? []) map.set(p.id, p);
@@ -79,14 +83,16 @@ export function SucursalesPage() {
             activas de{' '}
             <span className="font-semibold text-foreground">{stats.total}</span>
           </span>
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
-          >
-            <Plus className="size-4" strokeWidth={2.8} />
-            Nueva sucursal
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="size-4" strokeWidth={2.8} />
+              Nueva sucursal
+            </button>
+          )}
         </div>
       </header>
 
@@ -122,24 +128,26 @@ export function SucursalesPage() {
               <tr>
                 <th className="px-6 py-3">Sucursal</th>
                 <th className="px-6 py-3">Código</th>
-                <th className="px-6 py-3">Socio</th>
+                {isAdmin && <th className="px-6 py-3">Socio</th>}
                 <th className="px-6 py-3 text-right">Acceso</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
               {isLoading && filtered.length === 0 ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <SkeletonRow key={i} />
+                  <SkeletonRow key={i} showPartner={isAdmin} />
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={isAdmin ? 4 : 3}
                     className="px-6 py-14 text-center text-sm text-muted-foreground"
                   >
                     {search || filter !== 'all'
                       ? 'Ninguna sucursal coincide con tu búsqueda.'
-                      : 'Aún no hay sucursales creadas.'}
+                      : isAdmin
+                        ? 'Aún no hay sucursales creadas.'
+                        : 'Aún no tienes sucursales asignadas.'}
                   </td>
                 </tr>
               ) : (
@@ -147,6 +155,7 @@ export function SucursalesPage() {
                   <SucursalRow
                     key={sp.id}
                     salePoint={sp}
+                    showPartner={isAdmin}
                     partnerName={
                       sp.ownerPartnerId
                         ? partnerById.get(sp.ownerPartnerId)?.name ?? null
@@ -166,10 +175,12 @@ export function SucursalesPage() {
         </div>
       </div>
 
-      <CreateSalePointModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
+      {isAdmin && (
+        <CreateSalePointModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -177,11 +188,13 @@ export function SucursalesPage() {
 function SucursalRow({
   salePoint,
   partnerName,
+  showPartner,
   isToggling,
   onToggle,
 }: {
   salePoint: SalePoint;
   partnerName: string | null;
+  showPartner: boolean;
   isToggling: boolean;
   onToggle: (next: boolean) => void;
 }) {
@@ -209,16 +222,20 @@ function SucursalRow({
           {salePoint.code}
         </span>
       </td>
-      <td className="px-6 py-3.5">
-        {partnerName ? (
-          <span className="inline-flex items-center gap-1.5 text-sm text-foreground">
-            <Handshake className="size-3.5 text-indigo-600" />
-            {partnerName}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground/60">Sin asignar</span>
-        )}
-      </td>
+      {showPartner && (
+        <td className="px-6 py-3.5">
+          {partnerName ? (
+            <span className="inline-flex items-center gap-1.5 text-sm text-foreground">
+              <Handshake className="size-3.5 text-indigo-600" />
+              {partnerName}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/60">
+              Sin asignar
+            </span>
+          )}
+        </td>
+      )}
       <td className="px-6 py-3.5 text-right">
         <Toggle
           checked={salePoint.isActive}
@@ -280,10 +297,11 @@ function Toggle({
   );
 }
 
-function SkeletonRow() {
+function SkeletonRow({ showPartner }: { showPartner: boolean }) {
+  const cells = showPartner ? 4 : 3;
   return (
     <tr>
-      {[0, 1, 2, 3].map((i) => (
+      {Array.from({ length: cells }).map((_, i) => (
         <td key={i} className="px-6 py-4">
           <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
         </td>

@@ -70,12 +70,7 @@ const NAV_ITEMS: readonly NavItem[] = [
     icon: Calculator,
   },
   { to: APP_ROUTES.users, label: 'Usuarios', icon: User },
-  {
-    to: APP_ROUTES.sucursales,
-    label: 'Sucursales',
-    icon: MapPin,
-    roles: ADMIN_ONLY,
-  },
+  { to: APP_ROUTES.sucursales, label: 'Sucursales', icon: MapPin },
   {
     to: APP_ROUTES.draws,
     label: 'Sorteos',
