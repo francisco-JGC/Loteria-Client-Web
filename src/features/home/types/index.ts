@@ -28,9 +28,20 @@ export interface TodayDrawItem {
   cutoffMinutes: number;
 }
 
+export interface PendingPayoutPreview {
+  ticketId: string;
+  folio: string;
+  gameId: string;
+  gameName: string;
+  drawAt: string;
+  totalPrize: number;
+  client: string | null;
+}
+
 export interface PendingPayouts {
   count: number;
   totalAmount: number;
+  items: PendingPayoutPreview[];
 }
 
 export interface RankingItem {

@@ -62,6 +62,8 @@ export function LatestResultsPage() {
     return map;
   }, [games]);
 
+  // Server already returns rows sorted by (day DESC, game.orderIndex ASC,
+  // drawAt ASC); we only need to bucket them by day for the UI.
   const grouped = useMemo(() => groupByDay(data ?? []), [data]);
 
   return (
@@ -194,28 +196,29 @@ function managuaDayKey(iso: string): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Buckets already-sorted rows into day groups. The server returns items in
+ * final render order (day DESC, game.orderIndex ASC, drawAt ASC); this
+ * function preserves that order — no per-day resort needed here.
+ */
 function groupByDay(items: DrawResult[]): GroupedResults[] {
   const map = new Map<string, DrawResult[]>();
+  const keyOrder: string[] = [];
   for (const item of items) {
     const key = managuaDayKey(item.drawAt);
-    const arr = map.get(key) ?? [];
-    arr.push(item);
-    map.set(key, arr);
+    const bucket = map.get(key);
+    if (!bucket) {
+      map.set(key, [item]);
+      keyOrder.push(key);
+    } else {
+      bucket.push(item);
+    }
   }
-  // Ordenar cada grupo por hora descendente, y días descendentes.
-  const groups: GroupedResults[] = [];
-  for (const [dayKey, list] of map) {
-    list.sort(
-      (a, b) => new Date(b.drawAt).getTime() - new Date(a.drawAt).getTime(),
-    );
-    groups.push({
-      dayKey,
-      label: formatDayLabel(dayKey),
-      items: list,
-    });
-  }
-  groups.sort((a, b) => (a.dayKey < b.dayKey ? 1 : -1));
-  return groups;
+  return keyOrder.map((dayKey) => ({
+    dayKey,
+    label: formatDayLabel(dayKey),
+    items: map.get(dayKey)!,
+  }));
 }
 
 function formatDayLabel(iso: string): string {
