@@ -85,6 +85,9 @@ export function CreateUserModal({ open, onClose }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid || isPending) return;
+    // Payroll fields only make sense for sellers; strip them for other
+    // roles so we don't send meaningless data.
+    const isSeller = form.role === 'seller';
     await mutateAsync({
       name: trimmed.name,
       username: trimmed.username,
@@ -92,10 +95,9 @@ export function CreateUserModal({ open, onClose }: Props) {
       role: form.role,
       address: trimmed.address || undefined,
       nationalId: trimmed.nationalId || undefined,
-      paymentPercentage: form.paymentPercentage
-        ? paymentPercentage
-        : undefined,
-      salePointId: form.salePointId || undefined,
+      paymentPercentage:
+        isSeller && form.paymentPercentage ? paymentPercentage : undefined,
+      salePointId: isSeller ? form.salePointId || undefined : undefined,
     });
     onClose();
   };
@@ -213,7 +215,7 @@ export function CreateUserModal({ open, onClose }: Props) {
         </Field>
 
         <Field label="Rol" required>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <RoleOption
               active={form.role === 'seller'}
               onClick={() => set('role', 'seller')}
@@ -221,54 +223,64 @@ export function CreateUserModal({ open, onClose }: Props) {
               subtitle="App móvil"
             />
             <RoleOption
+              active={form.role === 'partner'}
+              onClick={() => set('role', 'partner')}
+              title="Socio"
+              subtitle="Sus sucursales"
+            />
+            <RoleOption
               active={form.role === 'admin'}
               onClick={() => set('role', 'admin')}
               title="Administrador"
-              subtitle="Panel web"
+              subtitle="Todo el sistema"
             />
           </div>
         </Field>
 
-        <Field
-          label="Porcentaje de pago"
-          hint="Comisión semanal sobre el total de ventas"
-        >
-          <div className="relative">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={100}
-              value={form.paymentPercentage}
-              onChange={(e) => set('paymentPercentage', e.target.value)}
-              placeholder="ej. 13"
-              className={cn(inputClass, 'pr-8')}
-            />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-              %
-            </span>
-          </div>
-        </Field>
+        {form.role === 'seller' && (
+          <>
+            <Field
+              label="Porcentaje de pago"
+              hint="Comisión semanal sobre el total de ventas"
+            >
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={100}
+                  value={form.paymentPercentage}
+                  onChange={(e) => set('paymentPercentage', e.target.value)}
+                  placeholder="ej. 13"
+                  className={cn(inputClass, 'pr-8')}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  %
+                </span>
+              </div>
+            </Field>
 
-        <Field label="Sucursal">
-          <select
-            value={form.salePointId}
-            onChange={(e) => set('salePointId', e.target.value)}
-            className={inputClass}
-            disabled={loadingSalePoints}
-          >
-            <option value="">
-              {loadingSalePoints
-                ? 'Cargando…'
-                : 'Seleccione una sucursal'}
-            </option>
-            {salePoints?.map((sp) => (
-              <option key={sp.id} value={sp.id}>
-                {sp.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <Field label="Sucursal">
+              <select
+                value={form.salePointId}
+                onChange={(e) => set('salePointId', e.target.value)}
+                className={inputClass}
+                disabled={loadingSalePoints}
+              >
+                <option value="">
+                  {loadingSalePoints
+                    ? 'Cargando…'
+                    : 'Seleccione una sucursal'}
+                </option>
+                {salePoints?.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </>
+        )}
 
         <Field label="Cédula" hint="ej. 281-030590-0002P">
           <input

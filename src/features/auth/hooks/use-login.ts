@@ -7,12 +7,14 @@ import { toApiError } from '@/shared/api/error-mapper';
 import type { AuthSession, LoginPayload } from '@/features/auth/types';
 import type { ApiError } from '@/shared/types/api';
 
+const WEB_ROLES = new Set(['admin', 'partner']);
+
 /**
  * Login mutation. On success it hydrates the auth store.
  *
- * The admin panel is admin-only: if the backend returns a non-admin session
- * we reject the login with a friendly {@link ApiError}. Sellers use the
- * mobile app; letting them in would land them in an empty admin shell.
+ * The web panel is for admins and partners (socios). Sellers use the mobile
+ * app — letting them in would land them in an empty shell, so we reject
+ * their session up front with a friendly {@link ApiError}.
  */
 export function useLogin() {
   const setSession = useAuthStore((s) => s.setSession);
@@ -25,12 +27,12 @@ export function useLogin() {
       } catch (error) {
         throw toApiError(error);
       }
-      if (session.user.role !== 'admin') {
+      if (!WEB_ROLES.has(session.user.role)) {
         throw {
           status: 403,
           code: 'Forbidden',
           message:
-            'Este panel es solo para administradores. ' +
+            'Este panel es solo para administradores y socios. ' +
             'Usa la aplicación móvil para tu cuenta de vendedor.',
         } satisfies ApiError;
       }

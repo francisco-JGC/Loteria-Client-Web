@@ -19,6 +19,7 @@ type RoleFilter = 'all' | UserRole;
 const ROLE_TABS: readonly SegmentTab<RoleFilter>[] = [
   { key: 'all', label: 'Todos' },
   { key: 'seller', label: 'Vendedores', tone: 'emerald' },
+  { key: 'partner', label: 'Socios' },
   { key: 'admin', label: 'Administradores', tone: 'amber' },
 ] as const;
 
@@ -292,20 +293,31 @@ function Empty() {
   return <span className="text-muted-foreground/50">—</span>;
 }
 
+const ROLE_STYLE: Record<UserRole, { classes: string; label: string }> = {
+  admin: {
+    classes: 'bg-amber-500/10 text-amber-700 ring-amber-500/20',
+    label: 'Administrador',
+  },
+  partner: {
+    classes: 'bg-indigo-500/10 text-indigo-700 ring-indigo-500/20',
+    label: 'Socio',
+  },
+  seller: {
+    classes: 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20',
+    label: 'Vendedor',
+  },
+};
+
 function RoleBadge({ role }: { role: UserRole }) {
-  const style =
-    role === 'admin'
-      ? 'bg-amber-500/10 text-amber-700 ring-amber-500/20'
-      : 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20';
-  const label = role === 'admin' ? 'Administrador' : 'Vendedor';
+  const style = ROLE_STYLE[role];
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
-        style,
+        style.classes,
       )}
     >
-      {label}
+      {style.label}
     </span>
   );
 }
