@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Eye, EyeOff, Loader2, Save, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Loader2, MapPin, Save, Sparkles } from 'lucide-react';
 
+import { useSession } from '@/features/auth/hooks/use-session';
 import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { useCreateUser } from '@/features/users/hooks/use-users';
 import { cn } from '@/shared/lib/cn';
 import { generatePassword } from '@/shared/lib/password';
 import { Modal } from '@/shared/ui/modal';
+import { Select } from '@/shared/ui/select';
 
 import { UserRole } from '@/features/users/types';
 
@@ -39,6 +41,9 @@ const EMPTY: FormState = {
 };
 
 export function CreateUserModal({ open, onClose }: Props) {
+  const session = useSession();
+  const isPartner = session?.user.role === UserRole.PARTNER;
+
   const [form, setForm] = useState<FormState>(EMPTY);
   const [showPassword, setShowPassword] = useState(false);
   const { data: salePoints, isLoading: loadingSalePoints } = useSalePoints();
@@ -46,11 +51,13 @@ export function CreateUserModal({ open, onClose }: Props) {
 
   useEffect(() => {
     if (open) {
-      setForm(EMPTY);
+      // Partners can only create sellers — force the role so they can't
+      // even see the other options.
+      setForm({ ...EMPTY, role: isPartner ? UserRole.SELLER : EMPTY.role });
       setShowPassword(false);
       reset();
     }
-  }, [open, reset]);
+  }, [open, reset, isPartner]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -74,11 +81,16 @@ export function CreateUserModal({ open, onClose }: Props) {
       paymentPercentage >= 0 &&
       paymentPercentage <= 100);
 
+  // Partners MUST assign the new seller to one of their sucursales
+  // (the backend rejects otherwise). Admins can leave it blank.
+  const salePointValid = !isPartner || form.salePointId.length > 0;
+
   const isValid =
     trimmed.name.length > 0 &&
     trimmed.username.length >= 3 &&
     form.password.length >= 6 &&
-    paymentValid;
+    paymentValid &&
+    salePointValid;
 
   const handleGenerate = () => {
     set('password', generatePassword());
@@ -218,28 +230,30 @@ export function CreateUserModal({ open, onClose }: Props) {
           </div>
         </Field>
 
-        <Field label="Rol" required>
-          <div className="grid grid-cols-3 gap-2">
-            <RoleOption
-              active={form.role === UserRole.SELLER}
-              onClick={() => set('role', UserRole.SELLER)}
-              title="Vendedor"
-              subtitle="App móvil"
-            />
-            <RoleOption
-              active={form.role === UserRole.PARTNER}
-              onClick={() => set('role', UserRole.PARTNER)}
-              title="Socio"
-              subtitle="Sus sucursales"
-            />
-            <RoleOption
-              active={form.role === UserRole.ADMIN}
-              onClick={() => set('role', UserRole.ADMIN)}
-              title="Administrador"
-              subtitle="Todo el sistema"
-            />
-          </div>
-        </Field>
+        {!isPartner && (
+          <Field label="Rol" required>
+            <div className="grid grid-cols-3 gap-2">
+              <RoleOption
+                active={form.role === UserRole.SELLER}
+                onClick={() => set('role', UserRole.SELLER)}
+                title="Vendedor"
+                subtitle="App móvil"
+              />
+              <RoleOption
+                active={form.role === UserRole.PARTNER}
+                onClick={() => set('role', UserRole.PARTNER)}
+                title="Socio"
+                subtitle="Sus sucursales"
+              />
+              <RoleOption
+                active={form.role === UserRole.ADMIN}
+                onClick={() => set('role', UserRole.ADMIN)}
+                title="Administrador"
+                subtitle="Todo el sistema"
+              />
+            </div>
+          </Field>
+        )}
 
         {form.role === UserRole.SELLER && (
           <>
@@ -264,24 +278,25 @@ export function CreateUserModal({ open, onClose }: Props) {
               </div>
             </Field>
 
-            <Field label="Sucursal">
-              <select
+            <Field label="Sucursal" required={isPartner}>
+              <Select
                 value={form.salePointId}
-                onChange={(e) => set('salePointId', e.target.value)}
-                className={inputClass}
+                onChange={(v) => set('salePointId', v)}
+                leadingIcon={<MapPin className="size-4" />}
+                placeholder={
+                  loadingSalePoints ? 'Cargando…' : 'Seleccione una sucursal'
+                }
                 disabled={loadingSalePoints}
-              >
-                <option value="">
-                  {loadingSalePoints
-                    ? 'Cargando…'
-                    : 'Seleccione una sucursal'}
-                </option>
-                {salePoints?.map((sp) => (
-                  <option key={sp.id} value={sp.id}>
-                    {sp.name}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  ...(isPartner
+                    ? []
+                    : [{ value: '', label: 'Sin sucursal' }]),
+                  ...(salePoints?.map((sp) => ({
+                    value: sp.id,
+                    label: sp.name,
+                  })) ?? []),
+                ]}
+              />
             </Field>
           </>
         )}

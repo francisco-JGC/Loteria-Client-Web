@@ -4,6 +4,7 @@ import {
   EyeOff,
   Loader2,
   Lock,
+  MapPin,
   Pencil,
   Save,
   ShieldCheck,
@@ -12,11 +13,13 @@ import {
   X,
 } from 'lucide-react';
 
+import { useSession } from '@/features/auth/hooks/use-session';
 import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { useUpdateUser } from '@/features/users/hooks/use-users';
 import { cn } from '@/shared/lib/cn';
 import { generatePassword } from '@/shared/lib/password';
 import { Modal } from '@/shared/ui/modal';
+import { Select } from '@/shared/ui/select';
 
 import { UserRole } from '@/features/users/types';
 import type { User } from '@/features/users/types';
@@ -53,6 +56,9 @@ function stateFromUser(user: User): FormState {
 }
 
 export function UserDetailsModal({ open, onClose, user }: Props) {
+  const session = useSession();
+  const canEditRole = session?.user.role === UserRole.ADMIN;
+
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -236,6 +242,7 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
           onChange={set}
           salePoints={salePoints ?? []}
           showPassword={showPassword}
+          canEditRole={canEditRole}
           onTogglePassword={() => setShowPassword((v) => !v)}
           onGenerate={handleGenerate}
         />
@@ -384,6 +391,7 @@ function EditForm({
   onChange,
   salePoints,
   showPassword,
+  canEditRole,
   onTogglePassword,
   onGenerate,
 }: {
@@ -391,6 +399,7 @@ function EditForm({
   onChange: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
   salePoints: { id: string; name: string }[];
   showPassword: boolean;
+  canEditRole: boolean;
   onTogglePassword: () => void;
   onGenerate: () => void;
 }) {
@@ -406,28 +415,30 @@ function EditForm({
         />
       </Field>
 
-      <Field label="Rol">
-        <div className="grid grid-cols-3 gap-2">
-          <RoleOption
-            active={form.role === UserRole.SELLER}
-            onClick={() => onChange('role', UserRole.SELLER)}
-            title="Vendedor"
-            subtitle="App móvil"
-          />
-          <RoleOption
-            active={form.role === UserRole.PARTNER}
-            onClick={() => onChange('role', UserRole.PARTNER)}
-            title="Socio"
-            subtitle="Sus sucursales"
-          />
-          <RoleOption
-            active={form.role === UserRole.ADMIN}
-            onClick={() => onChange('role', UserRole.ADMIN)}
-            title="Administrador"
-            subtitle="Todo el sistema"
-          />
-        </div>
-      </Field>
+      {canEditRole && (
+        <Field label="Rol">
+          <div className="grid grid-cols-3 gap-2">
+            <RoleOption
+              active={form.role === UserRole.SELLER}
+              onClick={() => onChange('role', UserRole.SELLER)}
+              title="Vendedor"
+              subtitle="App móvil"
+            />
+            <RoleOption
+              active={form.role === UserRole.PARTNER}
+              onClick={() => onChange('role', UserRole.PARTNER)}
+              title="Socio"
+              subtitle="Sus sucursales"
+            />
+            <RoleOption
+              active={form.role === UserRole.ADMIN}
+              onClick={() => onChange('role', UserRole.ADMIN)}
+              title="Administrador"
+              subtitle="Todo el sistema"
+            />
+          </div>
+        </Field>
+      )}
 
       <Field
         label="Nueva contraseña"
@@ -492,18 +503,19 @@ function EditForm({
           </Field>
 
           <Field label="Sucursal">
-            <select
+            <Select
               value={form.salePointId}
-              onChange={(e) => onChange('salePointId', e.target.value)}
-              className={inputClass}
-            >
-              <option value="">Sin sucursal</option>
-              {salePoints.map((sp) => (
-                <option key={sp.id} value={sp.id}>
-                  {sp.name}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => onChange('salePointId', v)}
+              leadingIcon={<MapPin className="size-4" />}
+              placeholder="Sin sucursal"
+              options={[
+                { value: '', label: 'Sin sucursal' },
+                ...salePoints.map((sp) => ({
+                  value: sp.id,
+                  label: sp.name,
+                })),
+              ]}
+            />
           </Field>
         </>
       )}
