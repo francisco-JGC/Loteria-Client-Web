@@ -37,12 +37,16 @@ export function LatestResultsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<DrawResult | null>(null);
 
-  // Wall-clock strings sent as ISO datetimes covering full days.
+  // Managua wall-clock day boundaries. Using UTC (`Z`) here dropped late
+  // evening draws whose absolute instant already rolled over to the next
+  // UTC day — the seller registers them for "today" but they never showed
+  // up in the list. Nicaragua sits at fixed UTC-6 (no DST) so pinning
+  // `-06:00` is safe year-round.
   const params = useMemo(
     () => ({
       gameId: gameId || undefined,
-      from: from ? `${from}T00:00:00.000Z` : undefined,
-      to: to ? `${to}T23:59:59.999Z` : undefined,
+      from: from ? `${from}T00:00:00-06:00` : undefined,
+      to: to ? `${to}T23:59:59-06:00` : undefined,
       limit: DEFAULT_LIMIT,
       offset: 0,
     }),
@@ -176,11 +180,24 @@ interface GroupedResults {
   items: DrawResult[];
 }
 
+/** "YYYY-MM-DD" of an ISO instant as seen in Managua wall-clock. */
+function managuaDayKey(iso: string): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Managua',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(iso));
+  const y = parts.find((p) => p.type === 'year')?.value ?? '';
+  const m = parts.find((p) => p.type === 'month')?.value ?? '';
+  const d = parts.find((p) => p.type === 'day')?.value ?? '';
+  return `${y}-${m}-${d}`;
+}
+
 function groupByDay(items: DrawResult[]): GroupedResults[] {
   const map = new Map<string, DrawResult[]>();
   for (const item of items) {
-    const d = new Date(item.drawAt);
-    const key = isoDate(d);
+    const key = managuaDayKey(item.drawAt);
     const arr = map.get(key) ?? [];
     arr.push(item);
     map.set(key, arr);

@@ -52,7 +52,7 @@ function splitIsoDrawAt(iso: string): { date: string; time: string } {
 
 const NUMBER_HINT: Record<GameType, string> = {
   regular: 'Ej. 05',
-  date: 'Ej. 15/03',
+  date: 'Ej. 13/02 o 13-feb',
   three_digit: 'Ej. 234',
   four_digit: 'Ej. 4589',
   multi_sorteo: 'Ej. 12',
