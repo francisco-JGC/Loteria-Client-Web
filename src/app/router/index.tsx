@@ -8,6 +8,7 @@ import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
 import { UsersPage } from '@/features/users/pages/users-page';
+import { WinnersPage } from '@/features/winners/pages/winners-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
 
 /**
@@ -60,7 +61,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.winners,
-                element: <Placeholder title="Ganadores" />,
+                element: <WinnersPage />,
               },
               {
                 path: APP_ROUTES.expenses,
