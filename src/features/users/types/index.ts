@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: UserRole;
   isActive: boolean;
+  phone: string | null;
   address: string | null;
   nationalId: string | null;
   paymentPercentage: number | null;
@@ -33,6 +34,7 @@ export interface CreateUserPayload {
   username: string;
   password: string;
   role: UserRole;
+  phone?: string;
   address?: string;
   nationalId?: string;
   paymentPercentage?: number;
@@ -49,6 +51,7 @@ export interface UpdateUserPayload {
   role?: UserRole;
   isActive?: boolean;
   password?: string;
+  phone?: string | null;
   address?: string | null;
   nationalId?: string | null;
   paymentPercentage?: number | null;

@@ -32,6 +32,7 @@ interface FormState {
   role: UserRole;
   paymentPercentage: string;
   salePointId: string;
+  phone: string;
   address: string;
   nationalId: string;
 }
@@ -44,6 +45,7 @@ function stateFromUser(user: User): FormState {
     paymentPercentage:
       user.paymentPercentage !== null ? String(user.paymentPercentage) : '',
     salePointId: user.salePointId ?? '',
+    phone: user.phone ?? '',
     address: user.address ?? '',
     nationalId: user.nationalId ?? '',
   };
@@ -79,6 +81,7 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
 
   const trimmed = {
     name: form.name.trim(),
+    phone: form.phone.trim(),
     address: form.address.trim(),
     nationalId: form.nationalId.trim(),
   };
@@ -102,6 +105,7 @@ export function UserDetailsModal({ open, onClose, user }: Props) {
         name: trimmed.name !== user.name ? trimmed.name : undefined,
         role: form.role !== user.role ? form.role : undefined,
         password: form.password ? form.password : undefined,
+        phone: diffNullable(trimmed.phone, user.phone),
         address: diffNullable(trimmed.address, user.address),
         nationalId: diffNullable(trimmed.nationalId, user.nationalId),
         paymentPercentage: diffNullableNumber(
@@ -310,6 +314,13 @@ function DetailsGrid({
           <span className="text-muted-foreground/60">—</span>
         )}
       </ReadRow>
+      <ReadRow label="Teléfono">
+        {user.phone ? (
+          <span className="font-mono">{user.phone}</span>
+        ) : (
+          <span className="text-muted-foreground/60">—</span>
+        )}
+      </ReadRow>
       <ReadRow label="Porcentaje de pago" hint="Comisión semanal">
         {user.paymentPercentage !== null ? (
           <span className="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-0.5 text-sm font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20">
@@ -492,6 +503,17 @@ function EditForm({
           placeholder="000-000000-0000X"
           maxLength={20}
           className={cn(inputClass, 'font-mono uppercase')}
+        />
+      </Field>
+
+      <Field label="Teléfono">
+        <input
+          type="tel"
+          value={form.phone}
+          onChange={(e) => onChange('phone', e.target.value)}
+          placeholder="0000-0000"
+          maxLength={20}
+          className={inputClass}
         />
       </Field>
 

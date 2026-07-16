@@ -21,6 +21,7 @@ interface FormState {
   role: UserRole;
   paymentPercentage: string; // held as string to allow empty input
   salePointId: string;
+  phone: string;
   address: string;
   nationalId: string;
 }
@@ -32,6 +33,7 @@ const EMPTY: FormState = {
   role: 'seller',
   paymentPercentage: '',
   salePointId: '',
+  phone: '',
   address: '',
   nationalId: '',
 };
@@ -58,10 +60,11 @@ export function CreateUserModal({ open, onClose }: Props) {
     () => ({
       name: form.name.trim(),
       username: form.username.trim(),
+      phone: form.phone.trim(),
       address: form.address.trim(),
       nationalId: form.nationalId.trim(),
     }),
-    [form.name, form.username, form.address, form.nationalId],
+    [form.name, form.username, form.phone, form.address, form.nationalId],
   );
 
   const paymentPercentage = parseInt(form.paymentPercentage, 10);
@@ -93,6 +96,7 @@ export function CreateUserModal({ open, onClose }: Props) {
       username: trimmed.username,
       password: form.password,
       role: form.role,
+      phone: trimmed.phone || undefined,
       address: trimmed.address || undefined,
       nationalId: trimmed.nationalId || undefined,
       paymentPercentage:
@@ -281,6 +285,17 @@ export function CreateUserModal({ open, onClose }: Props) {
             </Field>
           </>
         )}
+
+        <Field label="Teléfono" hint="ej. 8888-9999">
+          <input
+            type="tel"
+            value={form.phone}
+            onChange={(e) => set('phone', e.target.value)}
+            placeholder="0000-0000"
+            maxLength={20}
+            className={inputClass}
+          />
+        </Field>
 
         <Field label="Cédula" hint="ej. 281-030590-0002P">
           <input
