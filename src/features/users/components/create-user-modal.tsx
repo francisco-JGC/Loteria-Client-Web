@@ -7,7 +7,7 @@ import { cn } from '@/shared/lib/cn';
 import { generatePassword } from '@/shared/lib/password';
 import { Modal } from '@/shared/ui/modal';
 
-import type { UserRole } from '@/features/users/types';
+import { UserRole } from '@/features/users/types';
 
 interface Props {
   open: boolean;
@@ -30,7 +30,7 @@ const EMPTY: FormState = {
   name: '',
   username: '',
   password: '',
-  role: 'seller',
+  role: UserRole.SELLER,
   paymentPercentage: '',
   salePointId: '',
   phone: '',
@@ -90,7 +90,7 @@ export function CreateUserModal({ open, onClose }: Props) {
     if (!isValid || isPending) return;
     // Payroll fields only make sense for sellers; strip them for other
     // roles so we don't send meaningless data.
-    const isSeller = form.role === 'seller';
+    const isSeller = form.role === UserRole.SELLER;
     await mutateAsync({
       name: trimmed.name,
       username: trimmed.username,
@@ -221,27 +221,27 @@ export function CreateUserModal({ open, onClose }: Props) {
         <Field label="Rol" required>
           <div className="grid grid-cols-3 gap-2">
             <RoleOption
-              active={form.role === 'seller'}
-              onClick={() => set('role', 'seller')}
+              active={form.role === UserRole.SELLER}
+              onClick={() => set('role', UserRole.SELLER)}
               title="Vendedor"
               subtitle="App móvil"
             />
             <RoleOption
-              active={form.role === 'partner'}
-              onClick={() => set('role', 'partner')}
+              active={form.role === UserRole.PARTNER}
+              onClick={() => set('role', UserRole.PARTNER)}
               title="Socio"
               subtitle="Sus sucursales"
             />
             <RoleOption
-              active={form.role === 'admin'}
-              onClick={() => set('role', 'admin')}
+              active={form.role === UserRole.ADMIN}
+              onClick={() => set('role', UserRole.ADMIN)}
               title="Administrador"
               subtitle="Todo el sistema"
             />
           </div>
         </Field>
 
-        {form.role === 'seller' && (
+        {form.role === UserRole.SELLER && (
           <>
             <Field
               label="Porcentaje de pago"

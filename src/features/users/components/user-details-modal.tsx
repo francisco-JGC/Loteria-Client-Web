@@ -18,7 +18,8 @@ import { cn } from '@/shared/lib/cn';
 import { generatePassword } from '@/shared/lib/password';
 import { Modal } from '@/shared/ui/modal';
 
-import type { User, UserRole } from '@/features/users/types';
+import { UserRole } from '@/features/users/types';
+import type { User } from '@/features/users/types';
 
 interface Props {
   open: boolean;
@@ -400,20 +401,20 @@ function EditForm({
       <Field label="Rol">
         <div className="grid grid-cols-3 gap-2">
           <RoleOption
-            active={form.role === 'seller'}
-            onClick={() => onChange('role', 'seller')}
+            active={form.role === UserRole.SELLER}
+            onClick={() => onChange('role', UserRole.SELLER)}
             title="Vendedor"
             subtitle="App móvil"
           />
           <RoleOption
-            active={form.role === 'partner'}
-            onClick={() => onChange('role', 'partner')}
+            active={form.role === UserRole.PARTNER}
+            onClick={() => onChange('role', UserRole.PARTNER)}
             title="Socio"
             subtitle="Sus sucursales"
           />
           <RoleOption
-            active={form.role === 'admin'}
-            onClick={() => onChange('role', 'admin')}
+            active={form.role === UserRole.ADMIN}
+            onClick={() => onChange('role', UserRole.ADMIN)}
             title="Administrador"
             subtitle="Todo el sistema"
           />

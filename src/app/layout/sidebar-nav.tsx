@@ -21,7 +21,7 @@ import { useSession } from '@/features/auth/hooks/use-session';
 import { APP_ROUTES } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/cn';
 
-import type { UserRole } from '@/features/auth/types';
+import { UserRole } from '@/features/auth/types';
 
 interface NavItem {
   to: string;
@@ -36,7 +36,7 @@ interface NavItem {
 
 // Config-only items (games, resultados globales) stay admin-only. Partners
 // see the operational stuff they need to run their sucursales.
-const ADMIN_ONLY: readonly UserRole[] = ['admin'];
+const ADMIN_ONLY: readonly UserRole[] = [UserRole.ADMIN];
 
 const NAV_ITEMS: readonly NavItem[] = [
   { to: APP_ROUTES.home, label: 'Inicio', icon: Home },

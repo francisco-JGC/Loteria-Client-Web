@@ -18,6 +18,8 @@ import { cn } from '@/shared/lib/cn';
 import { Modal } from '@/shared/ui/modal';
 import { Select } from '@/shared/ui/select';
 
+import { UserRole } from '@/features/users/types';
+
 import type { SalePoint } from '@/features/sale-points/types';
 
 interface Props {
@@ -42,7 +44,7 @@ function stateFromSalePoint(sp: SalePoint): FormState {
 
 export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
   const session = useSession();
-  const isAdmin = session?.user.role === 'admin';
+  const isAdmin = session?.user.role === UserRole.ADMIN;
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
@@ -52,14 +54,16 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
     useUpdateSalePoint();
   const { mutateAsync: mutateUser, isPending: mutatingUser } = useUpdateUser();
 
-  // Sellers pool — we filter client-side. Population is small enough.
-  const { data: sellersPage, isLoading: loadingSellers } = useUsers({
-    role: 'seller',
+  // Full users pool — we filter client-side. Population is small enough.
+  // We include all roles so any user with salePointId matching this sucursal
+  // shows up in the "assigned" list (partners shouldn't have salePointId,
+  // but if they do it's data pollution worth surfacing so admin can clean it).
+  const { data: usersPage, isLoading: loadingUsers } = useUsers({
     limit: 200,
     offset: 0,
   });
   const { data: partnersPage } = useUsers({
-    role: 'partner',
+    role: UserRole.PARTNER,
     limit: 100,
     offset: 0,
   });
@@ -73,14 +77,17 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
     }
   }, [open, salePoint, resetInfo]);
 
-  const sellers = sellersPage?.items ?? [];
+  const allUsers = usersPage?.items ?? [];
   const assigned = useMemo(
-    () => sellers.filter((s) => s.salePointId === salePoint?.id),
-    [sellers, salePoint?.id],
+    () => allUsers.filter((u) => u.salePointId === salePoint?.id),
+    [allUsers, salePoint?.id],
   );
   const available = useMemo(
-    () => sellers.filter((s) => s.salePointId === null),
-    [sellers],
+    () =>
+      allUsers.filter(
+        (u) => u.role === UserRole.SELLER && u.salePointId === null,
+      ),
+    [allUsers],
   );
 
   if (!salePoint || !form) return null;
@@ -118,7 +125,7 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
 
   const handleAdd = async () => {
     if (!pickerValue || mutatingUser) return;
-    const user = sellers.find((s) => s.id === pickerValue);
+    const user = allUsers.find((u) => u.id === pickerValue);
     if (!user) return;
     await mutateUser({
       id: pickerValue,
@@ -222,7 +229,7 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
           <div className="flex items-center gap-2">
             <UsersIcon className="size-4 text-muted-foreground" />
             <h3 className="text-sm font-bold text-foreground">
-              Vendedores asignados
+              Usuarios asignados
             </h3>
             <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">
               {assigned.length}
@@ -230,13 +237,13 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
           </div>
         </div>
 
-        {loadingSellers ? (
+        {loadingUsers ? (
           <div className="py-6 text-center text-sm text-muted-foreground">
             <Loader2 className="mx-auto size-4 animate-spin" />
           </div>
         ) : assigned.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border bg-slate-50/50 px-4 py-6 text-center text-sm text-muted-foreground">
-            Aún no hay vendedores en esta sucursal.
+            Aún no hay usuarios en esta sucursal.
           </p>
         ) : (
           <ul className="divide-y divide-border/60 rounded-lg border border-border bg-card">
@@ -250,8 +257,11 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
                     {user.name.slice(0, 1).toUpperCase()}
                   </span>
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-foreground">
-                      {user.name}
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-semibold text-foreground">
+                        {user.name}
+                      </span>
+                      <RoleTag role={user.role} />
                     </div>
                     <div className="text-xs text-muted-foreground">
                       @{user.username}
@@ -513,6 +523,35 @@ function StatusBadge({ active }: { active: boolean }) {
     <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-500/20">
       <X className="size-3" strokeWidth={2.6} />
       Inactiva
+    </span>
+  );
+}
+
+const ROLE_TAG: Record<UserRole, { classes: string; label: string }> = {
+  admin: {
+    classes: 'bg-amber-500/10 text-amber-700 ring-amber-500/20',
+    label: 'Admin',
+  },
+  partner: {
+    classes: 'bg-indigo-500/10 text-indigo-700 ring-indigo-500/20',
+    label: 'Socio',
+  },
+  seller: {
+    classes: 'bg-emerald-500/10 text-emerald-700 ring-emerald-500/20',
+    label: 'Vendedor',
+  },
+};
+
+function RoleTag({ role }: { role: UserRole }) {
+  const style = ROLE_TAG[role];
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset',
+        style.classes,
+      )}
+    >
+      {style.label}
     </span>
   );
 }

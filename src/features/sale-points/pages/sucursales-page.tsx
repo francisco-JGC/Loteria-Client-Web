@@ -15,6 +15,8 @@ import {
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
 
+import { UserRole } from '@/features/users/types';
+
 import type { SalePoint } from '@/features/sale-points/types';
 import type { User } from '@/features/users/types';
 
@@ -33,7 +35,7 @@ export function SucursalesPage() {
   const [selected, setSelected] = useState<SalePoint | null>(null);
 
   const session = useSession();
-  const isAdmin = session?.user.role === 'admin';
+  const isAdmin = session?.user.role === UserRole.ADMIN;
 
   const { data, isLoading, error } = useSalePoints();
   const toggle = useToggleSalePoint();
@@ -43,7 +45,7 @@ export function SucursalesPage() {
   // so the extra fetch would return nothing useful and hits a role-gated
   // endpoint they can still call but that adds no value.
   const { data: partnersPage } = useUsers(
-    { role: 'partner', limit: 100, offset: 0 },
+    { role: UserRole.PARTNER, limit: 100, offset: 0 },
   );
   const partnerById = useMemo(() => {
     const map = new Map<string, User>();

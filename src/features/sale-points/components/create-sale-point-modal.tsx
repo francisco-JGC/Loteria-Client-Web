@@ -3,6 +3,7 @@ import { Handshake, Loader2, MapPin, Save } from 'lucide-react';
 
 import { useCreateSalePoint } from '@/features/sale-points/hooks/use-sale-points';
 import { useUsers } from '@/features/users/hooks/use-users';
+import { UserRole } from '@/features/users/types';
 import { cn } from '@/shared/lib/cn';
 import { Modal } from '@/shared/ui/modal';
 import { Select } from '@/shared/ui/select';
@@ -27,7 +28,7 @@ export function CreateSalePointModal({ open, onClose }: Props) {
   // We need the list of partners to populate the owner dropdown. Only fetch
   // when the modal is actually open so the list refreshes on every use.
   const { data: partnersPage, isLoading: loadingPartners } = useUsers({
-    role: 'partner',
+    role: UserRole.PARTNER,
     limit: 100,
     offset: 0,
   });

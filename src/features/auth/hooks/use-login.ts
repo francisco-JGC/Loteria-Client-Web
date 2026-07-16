@@ -4,10 +4,12 @@ import { login } from '@/features/auth/api/auth.api';
 import { useAuthStore } from '@/features/auth/store/auth.store';
 import { toApiError } from '@/shared/api/error-mapper';
 
+import { UserRole } from '@/features/auth/types';
+
 import type { AuthSession, LoginPayload } from '@/features/auth/types';
 import type { ApiError } from '@/shared/types/api';
 
-const WEB_ROLES = new Set(['admin', 'partner']);
+const WEB_ROLES = new Set<UserRole>([UserRole.ADMIN, UserRole.PARTNER]);
 
 /**
  * Login mutation. On success it hydrates the auth store.

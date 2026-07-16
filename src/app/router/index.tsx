@@ -4,6 +4,7 @@ import { AdminShell } from '@/app/layout/admin-shell';
 import { ProtectedRoute } from '@/app/router/protected-route';
 import { RoleGate } from '@/app/router/role-gate';
 import { LoginPage } from '@/features/auth/pages/login-page';
+import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <RoleGate allow={['admin', 'partner']} />,
+        element: <RoleGate allow={[UserRole.ADMIN, UserRole.PARTNER]} />,
         children: [
           {
             element: <AdminShell />,

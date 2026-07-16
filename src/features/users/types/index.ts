@@ -1,4 +1,10 @@
-export type UserRole = 'admin' | 'partner' | 'seller';
+export const UserRole = {
+  ADMIN: 'admin',
+  PARTNER: 'partner',
+  SELLER: 'seller',
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
   id: string;

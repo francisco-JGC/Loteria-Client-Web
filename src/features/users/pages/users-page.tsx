@@ -11,16 +11,18 @@ import {
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
 
+import { UserRole } from '@/features/users/types';
+
 import type { SalePoint } from '@/features/sale-points/types';
-import type { User, UserRole } from '@/features/users/types';
+import type { User } from '@/features/users/types';
 
 type RoleFilter = 'all' | UserRole;
 
 const ROLE_TABS: readonly SegmentTab<RoleFilter>[] = [
   { key: 'all', label: 'Todos' },
-  { key: 'seller', label: 'Vendedores', tone: 'emerald' },
-  { key: 'partner', label: 'Socios' },
-  { key: 'admin', label: 'Administradores', tone: 'amber' },
+  { key: UserRole.SELLER, label: 'Vendedores', tone: 'emerald' },
+  { key: UserRole.PARTNER, label: 'Socios' },
+  { key: UserRole.ADMIN, label: 'Administradores', tone: 'amber' },
 ] as const;
 
 const PAGE_SIZE = 20;

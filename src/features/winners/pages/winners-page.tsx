@@ -24,6 +24,7 @@ import { Select } from '@/shared/ui/select';
 
 import type { Game } from '@/features/games/types';
 import type { SalePoint } from '@/features/sale-points/types';
+import { UserRole } from '@/features/users/types';
 import type { User } from '@/features/users/types';
 import type { WinningTicket } from '@/features/winners/types';
 
@@ -77,7 +78,7 @@ export function WinnersPage() {
   const { data: games } = useGames();
   const { data: salePoints } = useSalePoints();
   const { data: sellersPage } = useUsers({
-    role: 'seller',
+    role: UserRole.SELLER,
     limit: 100,
     offset: 0,
   });

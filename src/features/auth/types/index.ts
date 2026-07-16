@@ -1,4 +1,5 @@
-export type UserRole = 'admin' | 'partner' | 'seller';
+export { UserRole } from '@/features/users/types';
+import type { UserRole } from '@/features/users/types';
 
 export interface AuthenticatedUser {
   id: string;
