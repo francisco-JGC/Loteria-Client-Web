@@ -7,6 +7,7 @@ import { LoginPage } from '@/features/auth/pages/login-page';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { SucursalesPage } from '@/features/sale-points/pages/sucursales-page';
 import { UsersPage } from '@/features/users/pages/users-page';
 import { WinnersPage } from '@/features/winners/pages/winners-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
@@ -78,6 +79,10 @@ const router = createBrowserRouter([
               {
                 path: APP_ROUTES.users,
                 element: <UsersPage />,
+              },
+              {
+                path: APP_ROUTES.sucursales,
+                element: <SucursalesPage />,
               },
               {
                 path: APP_ROUTES.draws,

@@ -6,6 +6,7 @@ import {
   Dices,
   History,
   Home,
+  MapPin,
   PlusSquare,
   Receipt,
   Repeat,
@@ -16,16 +17,27 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import { useSession } from '@/features/auth/hooks/use-session';
 import { APP_ROUTES } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/cn';
+
+import type { UserRole } from '@/features/auth/types';
 
 interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
+  /**
+   * Which roles can see this item. Omit to show to every web-eligible role
+   * (admin + partner). Sellers never reach the sidebar — they use mobile.
+   */
+  roles?: readonly UserRole[];
 }
 
-/** Sidebar nav registry. Order here defines display order. */
+// Config-only items (games, resultados globales) stay admin-only. Partners
+// see the operational stuff they need to run their sucursales.
+const ADMIN_ONLY: readonly UserRole[] = ['admin'];
+
 const NAV_ITEMS: readonly NavItem[] = [
   { to: APP_ROUTES.home, label: 'Inicio', icon: Home },
   { to: APP_ROUTES.sales, label: 'Ventas', icon: Receipt },
@@ -58,14 +70,36 @@ const NAV_ITEMS: readonly NavItem[] = [
     icon: Calculator,
   },
   { to: APP_ROUTES.users, label: 'Usuarios', icon: User },
-  { to: APP_ROUTES.draws, label: 'Sorteos', icon: Dices },
-  { to: APP_ROUTES.latestResults, label: 'Últimos Resultados', icon: History },
+  {
+    to: APP_ROUTES.sucursales,
+    label: 'Sucursales',
+    icon: MapPin,
+    roles: ADMIN_ONLY,
+  },
+  {
+    to: APP_ROUTES.draws,
+    label: 'Sorteos',
+    icon: Dices,
+    roles: ADMIN_ONLY,
+  },
+  {
+    to: APP_ROUTES.latestResults,
+    label: 'Últimos Resultados',
+    icon: History,
+    roles: ADMIN_ONLY,
+  },
 ] as const;
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const session = useSession();
+  const role = session?.user.role;
+  const visible = NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true;
+    return role !== undefined && item.roles.includes(role);
+  });
   return (
     <nav className="flex flex-col gap-1 p-3">
-      {NAV_ITEMS.map((item) => (
+      {visible.map((item) => (
         <SidebarNavItem key={item.to} item={item} onNavigate={onNavigate} />
       ))}
     </nav>

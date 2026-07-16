@@ -18,6 +18,7 @@ export const APP_ROUTES = {
   movements: '/movimientos',
   movementsCalc: '/calculo-movimientos',
   users: '/usuarios',
+  sucursales: '/sucursales',
   draws: '/sorteos',
   latestResults: '/ultimos-resultados',
 } as const;
