@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Clock,
   Dices,
+  Loader2,
   MapPin,
   Receipt,
   Search,
@@ -341,8 +342,13 @@ export function SalesPage() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="relative overflow-x-auto">
+          <table
+            className={cn(
+              'min-w-full text-sm transition-opacity',
+              isFetching && items.length > 0 && 'opacity-50',
+            )}
+          >
             <thead className="bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               <tr>
                 <th className="px-6 py-3">Folio</th>
@@ -385,6 +391,20 @@ export function SalesPage() {
               )}
             </tbody>
           </table>
+
+          {/*
+            Overlay spinner shown ONLY when refetching over existing data.
+            Initial load uses the skeleton rows below the table header, so we
+            skip the overlay in that case to avoid double loading indicators.
+          */}
+          {isFetching && items.length > 0 && (
+            <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
+              <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
+                <Loader2 className="size-3.5 animate-spin text-primary" />
+                Actualizando…
+              </div>
+            </div>
+          )}
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-3 text-xs text-muted-foreground">
