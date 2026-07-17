@@ -8,6 +8,7 @@ import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { SellerReportPage } from '@/features/reports/pages/seller-report-page';
 import { SucursalesPage } from '@/features/sale-points/pages/sucursales-page';
 import { SalesPage } from '@/features/tickets/pages/sales-page';
 import { UsersPage } from '@/features/users/pages/users-page';
@@ -52,7 +53,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.sellerReport,
-                element: <Placeholder title="Reporte Diario Vendedor" />,
+                element: <SellerReportPage />,
               },
               {
                 path: APP_ROUTES.branchFlowReport,
