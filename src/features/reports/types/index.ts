@@ -23,3 +23,27 @@ export interface SellerReportParams {
 export interface SellerReportResponse {
   items: SellerReportRow[];
 }
+
+export interface BranchTotalsRow {
+  salePointId: string;
+  salePointName: string;
+  ownerPartnerId: string | null;
+  ownerPartnerName: string | null;
+  ticketCount: number;
+  voidedCount: number;
+  paidCount: number;
+  billed: number;
+  paidPrize: number;
+  /** `billed - paidPrize` — revenue after payouts. Can be negative. */
+  net: number;
+}
+
+export interface BranchTotalsParams {
+  gameId?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface BranchTotalsResponse {
+  items: BranchTotalsRow[];
+}
