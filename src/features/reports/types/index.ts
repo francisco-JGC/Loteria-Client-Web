@@ -47,3 +47,27 @@ export interface BranchTotalsParams {
 export interface BranchTotalsResponse {
   items: BranchTotalsRow[];
 }
+
+export interface BillingByGameRow {
+  gameId: string;
+  gameName: string;
+  ticketCount: number;
+  voidedCount: number;
+  paidCount: number;
+  billed: number;
+  paidPrize: number;
+  net: number;
+  /** 0..1 — `billed / totalBilled`. */
+  share: number;
+}
+
+export interface BillingByGameParams {
+  salePointId?: string;
+  sellerId?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface BillingByGameResponse {
+  items: BillingByGameRow[];
+}

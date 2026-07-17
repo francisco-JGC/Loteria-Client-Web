@@ -8,6 +8,7 @@ import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { BillingPage } from '@/features/reports/pages/billing-page';
 import { BranchTotalsPage } from '@/features/reports/pages/branch-totals-page';
 import { SellerReportPage } from '@/features/reports/pages/seller-report-page';
 import { SucursalesPage } from '@/features/sale-points/pages/sucursales-page';
@@ -62,7 +63,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.billing,
-                element: <Placeholder title="Facturación Por Apuestas" />,
+                element: <BillingPage />,
               },
               {
                 path: APP_ROUTES.winners,
