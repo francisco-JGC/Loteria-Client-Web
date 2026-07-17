@@ -1,6 +1,8 @@
 import { http } from '@/shared/api/http';
 
 import type {
+  BranchFlowParams,
+  BranchFlowResponse,
   CreateMovementPayload,
   ListMovementsParams,
   ListMovementsResponse,
@@ -34,6 +36,22 @@ export async function createMovement(
 
 export async function deleteMovement(id: string): Promise<void> {
   await http.delete(`/movements/${id}`);
+}
+
+export async function getBranchFlow(
+  params: BranchFlowParams,
+): Promise<BranchFlowResponse> {
+  const { data } = await http.get<BranchFlowResponse>(
+    '/movements/branch-flow',
+    {
+      params: {
+        salePointId: params.salePointId,
+        from: params.from || undefined,
+        to: params.to || undefined,
+      },
+    },
+  );
+  return data;
 }
 
 export async function getMovementsBalance(

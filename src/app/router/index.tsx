@@ -8,6 +8,7 @@ import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { BranchFlowPage } from '@/features/movements/pages/branch-flow-page';
 import { ExpensesPage } from '@/features/movements/pages/expenses-page';
 import { MovementsBalancePage } from '@/features/movements/pages/movements-balance-page';
 import { MovementsPage } from '@/features/movements/pages/movements-page';
@@ -62,7 +63,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.branchFlowReport,
-                element: <Placeholder title="Reporte Flujo Sucursal" />,
+                element: <BranchFlowPage />,
               },
               {
                 path: APP_ROUTES.billing,

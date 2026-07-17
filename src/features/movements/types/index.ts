@@ -68,3 +68,26 @@ export interface CreateMovementPayload {
   /** ISO 8601. Optional — server defaults to now. */
   occurredAt?: string;
 }
+
+export type BranchFlowKind = 'ticket_sale' | 'prize_payout' | 'movement';
+
+export interface BranchFlowItem {
+  kind: BranchFlowKind;
+  at: string;
+  amount: number;
+  folio: string | null;
+  movementType: MovementType | null;
+  description: string;
+  refId: string;
+}
+
+export interface BranchFlowParams {
+  /** Mandatory — the report only makes sense per-sucursal. */
+  salePointId: string;
+  from?: string;
+  to?: string;
+}
+
+export interface BranchFlowResponse {
+  items: BranchFlowItem[];
+}
