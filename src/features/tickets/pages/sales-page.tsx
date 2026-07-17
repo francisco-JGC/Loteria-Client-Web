@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Clock,
   Dices,
-  Loader2,
   MapPin,
   Receipt,
   Search,
@@ -24,6 +23,7 @@ import {
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
 import { Select } from '@/shared/ui/select';
+import { TableLoadingOverlay } from '@/shared/ui/table-loading-overlay';
 
 import type { Game } from '@/features/games/types';
 import type { SalePoint } from '@/features/sale-points/types';
@@ -392,19 +392,7 @@ export function SalesPage() {
             </tbody>
           </table>
 
-          {/*
-            Overlay spinner shown ONLY when refetching over existing data.
-            Initial load uses the skeleton rows below the table header, so we
-            skip the overlay in that case to avoid double loading indicators.
-          */}
-          {isFetching && items.length > 0 && (
-            <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
-              <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-                <Loader2 className="size-3.5 animate-spin text-primary" />
-                Actualizando…
-              </div>
-            </div>
-          )}
+          <TableLoadingOverlay show={isFetching && items.length > 0} />
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-3 text-xs text-muted-foreground">

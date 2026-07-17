@@ -11,6 +11,7 @@ import {
   SegmentedControl,
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
+import { TableLoadingOverlay } from '@/shared/ui/table-loading-overlay';
 
 import { UserRole } from '@/features/users/types';
 
@@ -122,8 +123,13 @@ export function UsersPage() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="relative overflow-x-auto">
+          <table
+            className={cn(
+              'min-w-full text-sm transition-opacity',
+              isFetching && items.length > 0 && 'opacity-50',
+            )}
+          >
             <thead className="bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               <tr>
                 <th className="px-6 py-3">Nombre</th>
@@ -169,6 +175,8 @@ export function UsersPage() {
               )}
             </tbody>
           </table>
+
+          <TableLoadingOverlay show={isFetching && items.length > 0} />
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-3 text-xs text-muted-foreground">

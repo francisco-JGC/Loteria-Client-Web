@@ -34,6 +34,9 @@ export function useUsers(params: ListUsersParams) {
       }
     },
     placeholderData: (prev) => prev,
+    // Users don't change often. 5-min cache dedupes the many components that
+    // fetch the same role-scoped list (create/edit modals, filters, etc.).
+    staleTime: 5 * 60 * 1000,
   });
 }
 

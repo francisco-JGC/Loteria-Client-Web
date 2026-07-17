@@ -14,6 +14,7 @@ import {
   SegmentedControl,
   type SegmentTab,
 } from '@/shared/ui/segmented-control';
+import { TableLoadingOverlay } from '@/shared/ui/table-loading-overlay';
 
 import { UserRole } from '@/features/users/types';
 
@@ -37,7 +38,7 @@ export function SucursalesPage() {
   const session = useSession();
   const isAdmin = session?.user.role === UserRole.ADMIN;
 
-  const { data, isLoading, error } = useSalePoints();
+  const { data, isLoading, isFetching, error } = useSalePoints();
   const toggle = useToggleSalePoint();
 
   // Partners list only makes sense for the admin view (to resolve names
@@ -126,8 +127,13 @@ export function SucursalesPage() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="relative overflow-x-auto">
+          <table
+            className={cn(
+              'min-w-full text-sm transition-opacity',
+              isFetching && (data?.length ?? 0) > 0 && 'opacity-50',
+            )}
+          >
             <thead className="bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               <tr>
                 <th className="px-6 py-3">Sucursal</th>
@@ -177,6 +183,10 @@ export function SucursalesPage() {
               )}
             </tbody>
           </table>
+
+          <TableLoadingOverlay
+            show={isFetching && (data?.length ?? 0) > 0}
+          />
         </div>
       </div>
 
