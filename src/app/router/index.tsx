@@ -8,6 +8,7 @@ import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { MovementsBalancePage } from '@/features/movements/pages/movements-balance-page';
 import { BillingPage } from '@/features/reports/pages/billing-page';
 import { BranchTotalsPage } from '@/features/reports/pages/branch-totals-page';
 import { SellerReportPage } from '@/features/reports/pages/seller-report-page';
@@ -79,7 +80,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.movementsCalc,
-                element: <Placeholder title="Cálculo Movimientos" />,
+                element: <MovementsBalancePage />,
               },
               {
                 path: APP_ROUTES.users,
