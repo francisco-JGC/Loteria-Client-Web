@@ -43,3 +43,28 @@ export interface MovementsBalanceParams {
 export interface MovementsBalanceResponse {
   items: MovementsBalanceRow[];
 }
+
+export interface ListMovementsParams {
+  salePointId?: string;
+  type?: MovementType;
+  from?: string;
+  to?: string;
+  page: number;
+  limit: number;
+}
+
+export interface ListMovementsResponse {
+  items: Movement[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface CreateMovementPayload {
+  salePointId: string;
+  type: MovementType;
+  amount: number;
+  description?: string;
+  /** ISO 8601. Optional — server defaults to now. */
+  occurredAt?: string;
+}
