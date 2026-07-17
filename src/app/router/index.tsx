@@ -8,6 +8,7 @@ import { UserRole } from '@/features/auth/types';
 import { LatestResultsPage } from '@/features/draw-results/pages/latest-results-page';
 import { DrawsPage } from '@/features/games/pages/draws-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { ExpensesPage } from '@/features/movements/pages/expenses-page';
 import { MovementsBalancePage } from '@/features/movements/pages/movements-balance-page';
 import { MovementsPage } from '@/features/movements/pages/movements-page';
 import { BillingPage } from '@/features/reports/pages/billing-page';
@@ -73,7 +74,7 @@ const router = createBrowserRouter([
               },
               {
                 path: APP_ROUTES.expenses,
-                element: <Placeholder title="Gastos" />,
+                element: <ExpensesPage />,
               },
               {
                 path: APP_ROUTES.movements,
