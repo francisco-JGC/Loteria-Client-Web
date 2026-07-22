@@ -1,8 +1,16 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Loader2, MapPin, ShieldAlert } from 'lucide-react';
+import {
+  ArrowLeft,
+  Coins,
+  Loader2,
+  MapPin,
+  ShieldAlert,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { GamePrizeRow } from '@/features/game-prizes/components/game-prize-row';
+import { useEffectiveGamePrizes } from '@/features/game-prizes/hooks/use-game-prizes';
 import { useGames } from '@/features/games/hooks/use-games';
 import { LimitRow } from '@/features/sale-limits/components/limit-row';
 import { useSaleLimits } from '@/features/sale-limits/hooks/use-sale-limits';
@@ -30,6 +38,12 @@ const SECTIONS: readonly SectionDef[] = [
     label: 'Límites de venta',
     description: 'Tope en córdobas por número por sorteo',
     icon: ShieldAlert,
+  },
+  {
+    key: 'game-prizes',
+    label: 'Premios por juego',
+    description: 'Multiplicador de pago por juego',
+    icon: Coins,
   },
 ] as const;
 
@@ -103,6 +117,9 @@ export function SucursalConfigPage() {
         <div>
           {selectedSection === 'sale-limits' && (
             <SaleLimitsSection salePoint={salePoint} />
+          )}
+          {selectedSection === 'game-prizes' && (
+            <GamePrizesSection salePoint={salePoint} />
           )}
         </div>
       </div>
@@ -233,6 +250,58 @@ function SaleLimitsSection({ salePoint }: { salePoint: SalePoint }) {
               gameName={game.name}
               salePointId={salePoint.id}
               existing={limitByGameId.get(game.id)}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function GamePrizesSection({ salePoint }: { salePoint: SalePoint }) {
+  const { data, isLoading, error } = useEffectiveGamePrizes(salePoint.id);
+  const items = data?.items ?? [];
+  const overrideCount = items.filter((i) => i.hasOverride).length;
+
+  return (
+    <section className="rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div>
+          <h2 className="text-sm font-bold text-foreground">
+            Premios por juego
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Multiplicador aplicado al monto de la apuesta para calcular el
+            premio. El placeholder muestra el default del juego. Vaciar los
+            dos campos elimina el override y vuelve al default.
+          </p>
+        </div>
+        {overrideCount > 0 && (
+          <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20">
+            {overrideCount} personalizado(s)
+          </span>
+        )}
+      </div>
+
+      {error ? (
+        <div className="px-6 py-4 text-sm text-destructive">
+          No se pudieron cargar los premios: {error.message}
+        </div>
+      ) : isLoading ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          <Loader2 className="mx-auto size-5 animate-spin" />
+        </div>
+      ) : items.length === 0 ? (
+        <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+          Aún no hay juegos activos.
+        </div>
+      ) : (
+        <ul className="divide-y divide-border/60">
+          {items.map((prize) => (
+            <GamePrizeRow
+              key={prize.gameId}
+              salePointId={salePoint.id}
+              prize={prize}
             />
           ))}
         </ul>
