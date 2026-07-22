@@ -9,7 +9,10 @@ export interface AuthenticatedUser {
 }
 
 export interface AuthSession {
+  /** Short-lived JWT used in every API call as `Authorization: Bearer`. */
   token: string;
+  /** Long-lived JWT used only against `POST /auth/refresh`. */
+  refreshToken: string;
   user: AuthenticatedUser;
 }
 

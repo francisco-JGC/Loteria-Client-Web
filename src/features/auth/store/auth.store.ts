@@ -8,6 +8,11 @@ import type { AuthSession } from '@/features/auth/types';
 interface AuthState {
   session: AuthSession | null;
   setSession: (session: AuthSession) => void;
+  /**
+   * Replace only the short-lived access token — used after a successful
+   * silent refresh so the same session object keeps working.
+   */
+  setAccessToken: (token: string) => void;
   clearSession: () => void;
 }
 
@@ -23,6 +28,10 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       session: null,
       setSession: (session) => set({ session }),
+      setAccessToken: (token) =>
+        set((state) =>
+          state.session ? { session: { ...state.session, token } } : state,
+        ),
       clearSession: () => set({ session: null }),
     }),
     {
@@ -35,6 +44,16 @@ export const useAuthStore = create<AuthState>()(
 /** Bare token accessor for non-React code (interceptors). */
 export function getAuthToken(): string | null {
   return useAuthStore.getState().session?.token ?? null;
+}
+
+/** Refresh-token accessor for the interceptor's silent-refresh path. */
+export function getRefreshToken(): string | null {
+  return useAuthStore.getState().session?.refreshToken ?? null;
+}
+
+/** Called by the interceptor after a successful refresh. */
+export function updateAccessToken(token: string): void {
+  useAuthStore.getState().setAccessToken(token);
 }
 
 /**
