@@ -21,11 +21,11 @@ export function GamePrizeRow({
   salePointId: string;
   prize: EffectiveGamePrize;
 }) {
-  const [mainDraft, setMainDraft] = useState<string>(
-    prize.overrideMain !== null ? String(prize.overrideMain) : '',
+  const [exactDraft, setExactDraft] = useState<string>(
+    prize.overrideExact !== null ? String(prize.overrideExact) : '',
   );
-  const [secDraft, setSecDraft] = useState<string>(
-    prize.overrideSecondary !== null ? String(prize.overrideSecondary) : '',
+  const [easyDraft, setEasyDraft] = useState<string>(
+    prize.overrideEasy !== null ? String(prize.overrideEasy) : '',
   );
   const [status, setStatus] = useState<RowStatus>('idle');
   const savedTimer = useRef<number | null>(null);
@@ -34,16 +34,16 @@ export function GamePrizeRow({
 
   useEffect(() => {
     if (status === 'idle') {
-      setMainDraft(
-        prize.overrideMain !== null ? String(prize.overrideMain) : '',
+      setExactDraft(
+        prize.overrideExact !== null ? String(prize.overrideExact) : '',
       );
-      setSecDraft(
-        prize.overrideSecondary !== null
-          ? String(prize.overrideSecondary)
+      setEasyDraft(
+        prize.overrideEasy !== null
+          ? String(prize.overrideEasy)
           : '',
       );
     }
-  }, [prize.overrideMain, prize.overrideSecondary, status]);
+  }, [prize.overrideExact, prize.overrideEasy, status]);
 
   useEffect(() => {
     if (status !== 'saved') return;
@@ -62,20 +62,20 @@ export function GamePrizeRow({
   };
 
   const persist = async () => {
-    const nextMain = parseField(mainDraft);
-    const nextSec = parseField(secDraft);
+    const nextExact = parseField(exactDraft);
+    const nextEasy = parseField(easyDraft);
 
     // Invalid → snap back.
-    if (nextMain === 'invalid') {
-      setMainDraft(
-        prize.overrideMain !== null ? String(prize.overrideMain) : '',
+    if (nextExact === 'invalid') {
+      setExactDraft(
+        prize.overrideExact !== null ? String(prize.overrideExact) : '',
       );
       return;
     }
-    if (nextSec === 'invalid') {
-      setSecDraft(
-        prize.overrideSecondary !== null
-          ? String(prize.overrideSecondary)
+    if (nextEasy === 'invalid') {
+      setEasyDraft(
+        prize.overrideEasy !== null
+          ? String(prize.overrideEasy)
           : '',
       );
       return;
@@ -83,8 +83,8 @@ export function GamePrizeRow({
 
     // No-op.
     if (
-      nextMain === prize.overrideMain &&
-      nextSec === prize.overrideSecondary
+      nextExact === prize.overrideExact &&
+      nextEasy === prize.overrideEasy
     ) {
       return;
     }
@@ -94,8 +94,8 @@ export function GamePrizeRow({
       await upsert.mutateAsync({
         salePointId,
         gameId: prize.gameId,
-        mainMultiplier: nextMain,
-        secondaryMultiplier: nextSec,
+        exactMultiplier: nextExact,
+        easyMultiplier: nextEasy,
       });
       setStatus('saved');
     } catch {
@@ -103,18 +103,18 @@ export function GamePrizeRow({
     }
   };
 
-  const mainDirty =
-    (prize.overrideMain !== null ? String(prize.overrideMain) : '') !==
-    mainDraft.trim();
-  const secDirty =
-    (prize.overrideSecondary !== null
-      ? String(prize.overrideSecondary)
-      : '') !== secDraft.trim();
-  const anyDirty = mainDirty || secDirty;
+  const exactDirty =
+    (prize.overrideExact !== null ? String(prize.overrideExact) : '') !==
+    exactDraft.trim();
+  const easyDirty =
+    (prize.overrideEasy !== null
+      ? String(prize.overrideEasy)
+      : '') !== easyDraft.trim();
+  const anyDirty = exactDirty || easyDirty;
 
   // Games without a secondary default (Diaria, Fechas, Tica, etc.) don't
   // show the second input — one less field for the operator to look past.
-  const showSecondary = prize.secondaryDefault !== null;
+  const showEasy = prize.easyDefault !== null;
 
   const statusBadge =
     status !== 'idle'
@@ -127,7 +127,7 @@ export function GamePrizeRow({
     <li
       className={cn(
         'grid items-center gap-3 px-4 py-2.5 hover:bg-slate-50/40',
-        showSecondary
+        showEasy
           ? 'grid-cols-[1fr_auto_auto]'
           : 'grid-cols-[1fr_auto]',
       )}
@@ -146,9 +146,9 @@ export function GamePrizeRow({
                 Personalizado
               </span>
             ) : (
-              <>Default: {prize.mainDefault ?? '—'}x
-                {prize.secondaryDefault !== null &&
-                  ` / ${prize.secondaryDefault}x`}
+              <>Default: {prize.exactDefault ?? '—'}x
+                {prize.easyDefault !== null &&
+                  ` / ${prize.easyDefault}x`}
               </>
             )}
           </div>
@@ -157,24 +157,24 @@ export function GamePrizeRow({
 
       <PrizeField
         label="Exacta"
-        draft={mainDraft}
-        setDraft={setMainDraft}
-        placeholder={prize.mainDefault !== null ? String(prize.mainDefault) : '—'}
-        dirty={mainDirty}
-        overridden={prize.overrideMain !== null}
+        draft={exactDraft}
+        setDraft={setExactDraft}
+        placeholder={prize.exactDefault !== null ? String(prize.exactDefault) : '—'}
+        dirty={exactDirty}
+        overridden={prize.overrideExact !== null}
         onBlur={persist}
         // When there's no secondary field, the status badge lives on the
         // main input so the operator always sees the save confirmation.
-        rightBadge={!showSecondary ? statusBadge : undefined}
+        rightBadge={!showEasy ? statusBadge : undefined}
       />
-      {showSecondary && (
+      {showEasy && (
         <PrizeField
           label="Fácil"
-          draft={secDraft}
-          setDraft={setSecDraft}
-          placeholder={String(prize.secondaryDefault)}
-          dirty={secDirty}
-          overridden={prize.overrideSecondary !== null}
+          draft={easyDraft}
+          setDraft={setEasyDraft}
+          placeholder={String(prize.easyDefault)}
+          dirty={easyDirty}
+          overridden={prize.overrideEasy !== null}
           onBlur={persist}
           rightBadge={statusBadge}
         />
@@ -185,7 +185,7 @@ export function GamePrizeRow({
         <span
           className={cn(
             '-mt-1.5 pl-11 text-[10px] text-amber-700',
-            showSecondary ? 'col-span-3' : 'col-span-2',
+            showEasy ? 'col-span-3' : 'col-span-2',
           )}
         >
           Sin guardar

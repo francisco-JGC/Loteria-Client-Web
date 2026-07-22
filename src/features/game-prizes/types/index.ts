@@ -1,14 +1,14 @@
 export interface EffectiveGamePrize {
   gameId: string;
   gameName: string;
-  mainDefault: number | null;
-  secondaryDefault: number | null;
+  exactDefault: number | null;
+  easyDefault: number | null;
   /** Effective value: override if present, otherwise game default. */
-  mainMultiplier: number | null;
-  secondaryMultiplier: number | null;
+  exactMultiplier: number | null;
+  easyMultiplier: number | null;
   overrideId: string | null;
-  overrideMain: number | null;
-  overrideSecondary: number | null;
+  overrideExact: number | null;
+  overrideEasy: number | null;
   hasOverride: boolean;
 }
 
@@ -19,6 +19,6 @@ export interface ListEffectiveGamePrizesResponse {
 export interface UpsertGamePrizePayload {
   salePointId: string;
   gameId: string;
-  mainMultiplier: number | null;
-  secondaryMultiplier: number | null;
+  exactMultiplier: number | null;
+  easyMultiplier: number | null;
 }

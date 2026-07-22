@@ -109,8 +109,8 @@ export function DrawsPage() {
               <tr>
                 <th className="px-6 py-3">Juego</th>
                 <th className="px-6 py-3">Tipo</th>
-                <th className="px-6 py-3 text-right">Premio principal</th>
-                <th className="px-6 py-3 text-right">Premio secundario</th>
+                <th className="px-6 py-3 text-right">Premio exacta</th>
+                <th className="px-6 py-3 text-right">Premio fácil</th>
                 <th className="px-6 py-3">Horarios</th>
                 <th className="px-6 py-3 text-right">Acceso</th>
               </tr>
@@ -207,9 +207,9 @@ function GameRow({
         onClick={onOpen}
         role="button"
       >
-        {game.mainMultiplier !== null ? (
+        {game.exactMultiplier !== null ? (
           <span className="font-semibold text-foreground">
-            ×{game.mainMultiplier}
+            ×{game.exactMultiplier}
           </span>
         ) : (
           <Empty />
@@ -220,8 +220,8 @@ function GameRow({
         onClick={onOpen}
         role="button"
       >
-        {game.secondaryMultiplier !== null ? (
-          <>×{game.secondaryMultiplier}</>
+        {game.easyMultiplier !== null ? (
+          <>×{game.easyMultiplier}</>
         ) : (
           <Empty />
         )}
