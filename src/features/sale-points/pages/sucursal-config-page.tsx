@@ -1,0 +1,242 @@
+import { useMemo, useState } from 'react';
+import { ArrowLeft, Loader2, MapPin, ShieldAlert } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+
+import { useGames } from '@/features/games/hooks/use-games';
+import { LimitRow } from '@/features/sale-limits/components/limit-row';
+import { useSaleLimits } from '@/features/sale-limits/hooks/use-sale-limits';
+import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
+import { APP_ROUTES } from '@/shared/constants/routes';
+import { cn } from '@/shared/lib/cn';
+
+import type { SalePoint } from '@/features/sale-points/types';
+
+/**
+ * Per-sucursal settings page. Vertical section nav on the left, chosen
+ * section's content on the right. Structured this way so new categories
+ * (cutoff overrides, printer bindings, etc.) plug in without redesigning.
+ */
+interface SectionDef {
+  key: string;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+const SECTIONS: readonly SectionDef[] = [
+  {
+    key: 'sale-limits',
+    label: 'Límites de venta',
+    description: 'Tope en córdobas por número por sorteo',
+    icon: ShieldAlert,
+  },
+] as const;
+
+export function SucursalConfigPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [selectedSection, setSelectedSection] = useState<string>(
+    SECTIONS[0].key,
+  );
+
+  const { data: salePoints, isLoading } = useSalePoints();
+  const salePoint = useMemo(
+    () => (salePoints ?? []).find((sp) => sp.id === id) ?? null,
+    [salePoints, id],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!salePoint) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
+        <MapPin className="mx-auto size-8 text-muted-foreground/40" />
+        <p className="mt-3 text-sm text-muted-foreground">
+          Sucursal no encontrada.
+        </p>
+        <Link
+          to={APP_ROUTES.sucursales}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          <ArrowLeft className="size-3.5" />
+          Volver a sucursales
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(APP_ROUTES.sucursales)}
+            className="flex size-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-secondary hover:text-foreground"
+            aria-label="Volver"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Configuración
+            </div>
+            <h1 className="text-2xl font-black tracking-tight">
+              {salePoint.name}
+            </h1>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+        <SectionNav
+          selected={selectedSection}
+          onSelect={setSelectedSection}
+        />
+        <div>
+          {selectedSection === 'sale-limits' && (
+            <SaleLimitsSection salePoint={salePoint} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionNav({
+  selected,
+  onSelect,
+}: {
+  selected: string;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <nav className="rounded-2xl border border-border bg-card p-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <ul className="flex flex-col gap-1">
+        {SECTIONS.map((s) => {
+          const Icon = s.icon;
+          const active = s.key === selected;
+          return (
+            <li key={s.key}>
+              <button
+                type="button"
+                onClick={() => onSelect(s.key)}
+                className={cn(
+                  'group flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition',
+                  active
+                    ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                    : 'text-foreground/75 hover:bg-secondary hover:text-foreground',
+                )}
+              >
+                <Icon
+                  className={cn(
+                    'mt-0.5 size-4 shrink-0',
+                    active
+                      ? 'text-primary-foreground'
+                      : 'text-foreground/60 group-hover:text-foreground',
+                  )}
+                  strokeWidth={active ? 2.4 : 2}
+                />
+                <div className="min-w-0">
+                  <div
+                    className={cn(
+                      'text-sm font-semibold',
+                      !active && 'text-foreground',
+                    )}
+                  >
+                    {s.label}
+                  </div>
+                  <div
+                    className={cn(
+                      'text-[11px]',
+                      active
+                        ? 'text-primary-foreground/80'
+                        : 'text-muted-foreground/70',
+                    )}
+                  >
+                    {s.description}
+                  </div>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+function SaleLimitsSection({ salePoint }: { salePoint: SalePoint }) {
+  const { data: games } = useGames();
+  const { data: limits, isLoading, error } = useSaleLimits();
+
+  const gamesActive = useMemo(
+    () => (games ?? []).filter((g) => g.isActive),
+    [games],
+  );
+  const limitByGameId = useMemo(() => {
+    const map = new Map<
+      string,
+      NonNullable<typeof limits>[number]
+    >();
+    for (const l of limits ?? []) {
+      if (l.salePointId === salePoint.id) map.set(l.gameId, l);
+    }
+    return map;
+  }, [limits, salePoint.id]);
+
+  return (
+    <section className="rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div>
+          <h2 className="text-sm font-bold text-foreground">
+            Límites de venta
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Tope en córdobas por número por sorteo. Al alcanzarse, el número
+            queda bloqueado hasta el siguiente sorteo. Se resetea automáticamente.
+            Celda vacía = sin límite.
+          </p>
+        </div>
+        {limitByGameId.size > 0 && (
+          <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20">
+            {limitByGameId.size} juego(s)
+          </span>
+        )}
+      </div>
+
+      {error ? (
+        <div className="px-6 py-4 text-sm text-destructive">
+          No se pudieron cargar los límites: {error.message}
+        </div>
+      ) : isLoading ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          <Loader2 className="mx-auto size-5 animate-spin" />
+        </div>
+      ) : gamesActive.length === 0 ? (
+        <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+          Aún no hay juegos activos.
+        </div>
+      ) : (
+        <ul className="divide-y divide-border/60">
+          {gamesActive.map((game) => (
+            <LimitRow
+              key={game.id}
+              gameId={game.id}
+              gameName={game.name}
+              salePointId={salePoint.id}
+              existing={limitByGameId.get(game.id)}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}

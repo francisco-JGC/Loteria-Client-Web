@@ -19,7 +19,13 @@ export const APP_ROUTES = {
   movementsCalc: '/calculo-movimientos',
   users: '/usuarios',
   sucursales: '/sucursales',
+  sucursalConfig: '/sucursales/:id/configuracion',
   draws: '/sorteos',
   saleLimits: '/limites-venta',
   latestResults: '/ultimos-resultados',
 } as const;
+
+/** Concrete `/sucursales/{id}/configuracion` URL for navigation. */
+export function sucursalConfigPath(id: string): string {
+  return `/sucursales/${id}/configuracion`;
+}

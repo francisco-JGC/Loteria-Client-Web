@@ -1,17 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, Dices, Loader2, MapPin, ShieldAlert } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Copy, Loader2, MapPin, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useGames } from '@/features/games/hooks/use-games';
 import { upsertSaleLimit } from '@/features/sale-limits/api/sale-limits.api';
-import {
-  useDeleteSaleLimit,
-  useSaleLimits,
-  useUpsertSaleLimit,
-} from '@/features/sale-limits/hooks/use-sale-limits';
+import { LimitRow } from '@/features/sale-limits/components/limit-row';
+import { useSaleLimits } from '@/features/sale-limits/hooks/use-sale-limits';
 import { useSalePoints } from '@/features/sale-points/hooks/use-sale-points';
 import { cn } from '@/shared/lib/cn';
-import { formatCurrency } from '@/shared/lib/format';
 import { Select } from '@/shared/ui/select';
 
 import type { SaleLimit } from '@/features/sale-limits/types';
@@ -166,146 +162,6 @@ function EmptyState() {
         Elegí una sucursal arriba para configurar sus límites de venta.
       </p>
     </div>
-  );
-}
-
-type RowStatus = 'idle' | 'saving' | 'saved';
-
-function LimitRow({
-  gameId,
-  gameName,
-  salePointId,
-  existing,
-}: {
-  gameId: string;
-  gameName: string;
-  salePointId: string;
-  existing: SaleLimit | undefined;
-}) {
-  const [draft, setDraft] = useState<string>(
-    existing ? String(existing.amount) : '',
-  );
-  const [status, setStatus] = useState<RowStatus>('idle');
-  const savedTimer = useRef<number | null>(null);
-
-  const upsert = useUpsertSaleLimit();
-  const remove = useDeleteSaleLimit();
-
-  useEffect(() => {
-    // Only sync from server when we're not mid-edit, otherwise the input
-    // would clobber the user's typing on refetch.
-    if (status === 'idle') {
-      setDraft(existing ? String(existing.amount) : '');
-    }
-  }, [existing, status]);
-
-  useEffect(() => {
-    if (status !== 'saved') return;
-    savedTimer.current = window.setTimeout(() => setStatus('idle'), 1500);
-    return () => {
-      if (savedTimer.current) window.clearTimeout(savedTimer.current);
-    };
-  }, [status]);
-
-  const persist = async () => {
-    const trimmed = draft.trim();
-    const numeric = trimmed === '' ? NaN : Number(trimmed);
-    const nextAmount =
-      Number.isInteger(numeric) && numeric >= 0 ? numeric : null;
-
-    // Cleared → delete existing row (lift the cap).
-    if (trimmed === '') {
-      if (!existing) return;
-      setStatus('saving');
-      try {
-        await remove.mutateAsync(existing.id);
-        setStatus('saved');
-      } catch {
-        setStatus('idle');
-      }
-      return;
-    }
-
-    // Invalid → snap back to previous value.
-    if (nextAmount === null) {
-      setDraft(existing ? String(existing.amount) : '');
-      return;
-    }
-
-    // No-op.
-    if (existing && nextAmount === existing.amount) return;
-
-    setStatus('saving');
-    try {
-      await upsert.mutateAsync({ gameId, salePointId, amount: nextAmount });
-      setStatus('saved');
-    } catch {
-      setStatus('idle');
-    }
-  };
-
-  const isDirty =
-    (existing ? String(existing.amount) : '') !== draft.trim();
-
-  return (
-    <li className="flex items-center justify-between gap-4 px-6 py-3 hover:bg-slate-50/40">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white">
-          <Dices className="size-4" strokeWidth={2.4} />
-        </span>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-foreground">
-            {gameName}
-          </div>
-          <div className="text-[11px] text-muted-foreground">
-            {existing
-              ? `Actual: ${formatCurrency(existing.amount)}`
-              : 'Sin límite'}
-          </div>
-        </div>
-      </div>
-
-      <div className="relative w-44 shrink-0">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-          C$
-        </span>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={persist}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.currentTarget.blur();
-            } else if (e.key === 'Escape') {
-              setDraft(existing ? String(existing.amount) : '');
-              e.currentTarget.blur();
-            }
-          }}
-          placeholder="Sin límite"
-          className={cn(
-            'w-full rounded-md border bg-background pl-9 pr-8 py-2 text-right text-sm tabular-nums transition',
-            'placeholder:text-muted-foreground/50 placeholder:font-normal placeholder:text-xs',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
-            existing
-              ? 'border-indigo-200 bg-indigo-50/50 font-semibold text-indigo-900'
-              : 'border-border',
-            isDirty && status === 'idle' && 'border-amber-300 bg-amber-50/50',
-          )}
-        />
-        {status !== 'idle' && (
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-            {status === 'saving' ? (
-              <Loader2 className="size-4 animate-spin text-primary" />
-            ) : (
-              <Check className="size-4 text-emerald-600" strokeWidth={2.8} />
-            )}
-          </span>
-        )}
-      </div>
-    </li>
   );
 }
 

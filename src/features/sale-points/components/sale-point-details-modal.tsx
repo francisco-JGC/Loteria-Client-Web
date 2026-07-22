@@ -5,15 +5,18 @@ import {
   MapPin,
   Pencil,
   Save,
+  Settings,
   Trash2,
   UserPlus,
   Users as UsersIcon,
   X,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { useSession } from '@/features/auth/hooks/use-session';
 import { useUpdateSalePoint } from '@/features/sale-points/hooks/use-sale-points';
 import { useUpdateUser, useUsers } from '@/features/users/hooks/use-users';
+import { sucursalConfigPath } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/cn';
 import { Modal } from '@/shared/ui/modal';
 import { Select } from '@/shared/ui/select';
@@ -45,6 +48,7 @@ function stateFromSalePoint(sp: SalePoint): FormState {
 export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
   const session = useSession();
   const isAdmin = session?.user.role === UserRole.ADMIN;
+  const navigate = useNavigate();
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
@@ -186,6 +190,17 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
             >
               Cerrar
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate(sucursalConfigPath(salePoint.id));
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold text-foreground hover:bg-secondary"
+            >
+              <Settings className="size-4" strokeWidth={2.4} />
+              Configuración
+            </button>
             {isAdmin && (
               <button
                 type="button"
@@ -217,6 +232,7 @@ export function SalePointDetailsModal({ open, onClose, salePoint }: Props) {
       ) : (
         <InfoGrid salePoint={salePoint} partnerName={partnerName} />
       )}
+
 
       <div className="mt-6 border-t border-border pt-5">
         <div className="mb-3 flex items-center justify-between">
@@ -517,4 +533,5 @@ function StatusBadge({ active }: { active: boolean }) {
     </span>
   );
 }
+
 
