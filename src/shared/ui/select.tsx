@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 
 import { cn } from '@/shared/lib/cn';
@@ -102,10 +101,16 @@ export function Select<V extends string>({
       e.preventDefault();
       const opt = options[activeIndex];
       if (opt && !opt.disabled) {
-        flushSync(() => setOpen(false));
+        setOpen(false);
         onChange(opt.value);
       }
     }
+  };
+
+  const pickOption = (opt: SelectOption<V>) => {
+    if (opt.disabled) return;
+    setOpen(false);
+    onChange(opt.value);
   };
 
   return (
@@ -175,15 +180,14 @@ export function Select<V extends string>({
                     type="button"
                     disabled={opt.disabled}
                     onMouseEnter={() => setActiveIndex(idx)}
-                    onClick={(e) => {
+                    // Handle selection on pointerdown (fires before click +
+                    // any label-click-transfer weirdness) and preventDefault
+                    // so the browser doesn't emit a subsequent click event
+                    // that could reopen the menu or re-focus the trigger.
+                    onPointerDown={(e) => {
                       if (opt.disabled) return;
-                      e.stopPropagation();
-                      // flushSync so the menu unmounts BEFORE the parent
-                      // re-renders from `onChange`. Prevents the visual "menu
-                      // sticks open" glitch some browsers show when the state
-                      // batch commits a beat late.
-                      flushSync(() => setOpen(false));
-                      onChange(opt.value);
+                      e.preventDefault();
+                      pickOption(opt);
                     }}
                     className={cn(
                       'flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition',
