@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Handshake, Loader2, MapPin, Plus, Search } from 'lucide-react';
+import { Handshake, Loader2, MapPin, Plus, Search, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { useSession } from '@/features/auth/hooks/use-session';
 import { CreateSalePointModal } from '@/features/sale-points/components/create-sale-point-modal';
@@ -9,6 +10,7 @@ import {
   useToggleSalePoint,
 } from '@/features/sale-points/hooks/use-sale-points';
 import { useUsers } from '@/features/users/hooks/use-users';
+import { sucursalConfigPath } from '@/shared/constants/routes';
 import { cn } from '@/shared/lib/cn';
 import {
   SegmentedControl,
@@ -140,6 +142,7 @@ export function SucursalesPage() {
                 <th className="px-6 py-3">Código</th>
                 {isAdmin && <th className="px-6 py-3">Socio</th>}
                 <th className="px-6 py-3 text-right">Acceso</th>
+                <th className="w-12 px-2 py-3" aria-label="Configuración" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60">
@@ -150,7 +153,7 @@ export function SucursalesPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isAdmin ? 4 : 3}
+                    colSpan={isAdmin ? 5 : 4}
                     className="px-6 py-14 text-center text-sm text-muted-foreground"
                   >
                     {search || filter !== 'all'
@@ -271,6 +274,19 @@ function SucursalRow({
           label={salePoint.isActive ? 'Activa' : 'Inactiva'}
         />
       </td>
+      <td
+        className="w-12 px-2 py-3.5 text-right"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Link
+          to={sucursalConfigPath(salePoint.id)}
+          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+          title="Configuración"
+          aria-label={`Configurar ${salePoint.name}`}
+        >
+          <Settings className="size-4" strokeWidth={2.2} />
+        </Link>
+      </td>
     </tr>
   );
 }
@@ -324,7 +340,7 @@ function Toggle({
 }
 
 function SkeletonRow({ showPartner }: { showPartner: boolean }) {
-  const cells = showPartner ? 4 : 3;
+  const cells = showPartner ? 5 : 4;
   return (
     <tr>
       {Array.from({ length: cells }).map((_, i) => (
