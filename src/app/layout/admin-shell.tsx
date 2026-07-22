@@ -97,11 +97,7 @@ function Topbar({
           <Menu className="size-5" />
         </button>
         <div className="flex items-center gap-2">
-          <img
-            src="/logo.png"
-            alt="LM NICA"
-            className="size-8 rounded-md object-cover shadow-sm"
-          />
+          <img src="/logo.png" alt="LM NICA" className="size-9 object-contain" />
           <span className="text-sm font-black tracking-tight">LM NICA</span>
         </div>
 
@@ -208,7 +204,7 @@ function SidebarHeader({ onClose }: { onClose: () => void }) {
       <img
         src="/logo.png"
         alt="LM NICA"
-        className="size-10 shrink-0 rounded-lg object-cover shadow-sm"
+        className="size-11 shrink-0 object-contain"
       />
 
       <div className="min-w-0 flex-1">

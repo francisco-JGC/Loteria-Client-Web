@@ -41,7 +41,7 @@ export function LoginPage() {
           <img
             src="/logo.png"
             alt="LM NICA"
-            className="size-20 rounded-xl object-cover shadow-md"
+            className="size-24 object-contain"
           />
           <h1 className="text-2xl font-black tracking-tight">
             LM NICA <span className="text-primary">Admin</span>
