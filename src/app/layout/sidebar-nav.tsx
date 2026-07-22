@@ -10,6 +10,7 @@ import {
   PlusSquare,
   Receipt,
   Repeat,
+  ShieldAlert,
   Trophy,
   User,
   UserSearch,
@@ -76,6 +77,11 @@ const NAV_ITEMS: readonly NavItem[] = [
     label: 'Sorteos',
     icon: Dices,
     roles: ADMIN_ONLY,
+  },
+  {
+    to: APP_ROUTES.saleLimits,
+    label: 'Límites de Venta',
+    icon: ShieldAlert,
   },
   {
     to: APP_ROUTES.latestResults,

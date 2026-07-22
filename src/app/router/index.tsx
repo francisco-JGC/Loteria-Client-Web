@@ -15,6 +15,7 @@ import { MovementsPage } from '@/features/movements/pages/movements-page';
 import { BillingPage } from '@/features/reports/pages/billing-page';
 import { BranchTotalsPage } from '@/features/reports/pages/branch-totals-page';
 import { SellerReportPage } from '@/features/reports/pages/seller-report-page';
+import { SaleLimitsPage } from '@/features/sale-limits/pages/sale-limits-page';
 import { SucursalesPage } from '@/features/sale-points/pages/sucursales-page';
 import { SalesPage } from '@/features/tickets/pages/sales-page';
 import { UsersPage } from '@/features/users/pages/users-page';
@@ -96,6 +97,10 @@ const router = createBrowserRouter([
               {
                 path: APP_ROUTES.draws,
                 element: <DrawsPage />,
+              },
+              {
+                path: APP_ROUTES.saleLimits,
+                element: <SaleLimitsPage />,
               },
               {
                 path: APP_ROUTES.latestResults,

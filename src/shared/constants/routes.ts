@@ -20,5 +20,6 @@ export const APP_ROUTES = {
   users: '/usuarios',
   sucursales: '/sucursales',
   draws: '/sorteos',
+  saleLimits: '/limites-venta',
   latestResults: '/ultimos-resultados',
 } as const;
