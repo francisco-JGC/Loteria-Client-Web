@@ -23,12 +23,6 @@ import { UsersPage } from '@/features/users/pages/users-page';
 import { WinnersPage } from '@/features/winners/pages/winners-page';
 import { APP_ROUTES } from '@/shared/constants/routes';
 
-/**
- * Router assembled with route objects rather than JSX for clarity.
- *
- * Every path here matches a sidebar item in `SidebarNav`. Real feature pages
- * will progressively replace the `<Placeholder />` slots.
- */
 const router = createBrowserRouter([
   {
     path: APP_ROUTES.login,
@@ -119,18 +113,6 @@ const router = createBrowserRouter([
   },
   { path: '*', element: <Navigate to={APP_ROUTES.home} replace /> },
 ]);
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
-      <h2 className="text-2xl font-bold mb-2">{title}</h2>
-      <p className="text-muted-foreground text-sm">
-        Próximamente — esta sección se conectará al backend en una siguiente
-        iteración.
-      </p>
-    </div>
-  );
-}
 
 export function AppRouter() {
   return <RouterProvider router={router} />;
