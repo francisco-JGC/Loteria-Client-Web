@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Dices, Loader2 } from 'lucide-react';
+import { Check, Dices, Loader2, RotateCcw } from 'lucide-react';
 
 import { useUpsertGamePrize } from '@/features/game-prizes/hooks/use-game-prizes';
 import { cn } from '@/shared/lib/cn';
@@ -9,10 +9,13 @@ import type { EffectiveGamePrize } from '@/features/game-prizes/types';
 type RowStatus = 'idle' | 'saving' | 'saved';
 
 /**
- * Editable pair of multipliers (main + secondary) for one game at one
- * sucursal. Placeholder shows the game default; empty input inherits it.
- * Save-on-blur, Enter to commit, Escape to cancel. Clearing both fields
- * deletes the override.
+ * Editable pair of multipliers (exact + easy) for one game at one sucursal.
+ * Inputs come pre-filled with the current effective value (override or
+ * default) so operators tweak that number directly. If the resulting value
+ * equals the game default, we send `null` to the server which drops the
+ * override row and returns to inheriting the default.
+ *
+ * Save-on-blur, Enter to commit, Escape to snap back.
  */
 export function GamePrizeRow({
   salePointId,
@@ -21,12 +24,13 @@ export function GamePrizeRow({
   salePointId: string;
   prize: EffectiveGamePrize;
 }) {
-  const [exactDraft, setExactDraft] = useState<string>(
-    prize.overrideExact !== null ? String(prize.overrideExact) : '',
-  );
-  const [easyDraft, setEasyDraft] = useState<string>(
-    prize.overrideEasy !== null ? String(prize.overrideEasy) : '',
-  );
+  const initialExact =
+    prize.exactMultiplier !== null ? String(prize.exactMultiplier) : '';
+  const initialEasy =
+    prize.easyMultiplier !== null ? String(prize.easyMultiplier) : '';
+
+  const [exactDraft, setExactDraft] = useState<string>(initialExact);
+  const [easyDraft, setEasyDraft] = useState<string>(initialEasy);
   const [status, setStatus] = useState<RowStatus>('idle');
   const savedTimer = useRef<number | null>(null);
 
@@ -34,16 +38,13 @@ export function GamePrizeRow({
 
   useEffect(() => {
     if (status === 'idle') {
-      setExactDraft(
-        prize.overrideExact !== null ? String(prize.overrideExact) : '',
-      );
-      setEasyDraft(
-        prize.overrideEasy !== null
-          ? String(prize.overrideEasy)
-          : '',
-      );
+      setExactDraft(initialExact);
+      setEasyDraft(initialEasy);
     }
-  }, [prize.overrideExact, prize.overrideEasy, status]);
+    // We intentionally depend on the derived strings so a background refetch
+    // that lands on the same values doesn't trigger a rerender.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExact, initialEasy, status]);
 
   useEffect(() => {
     if (status !== 'saved') return;
@@ -61,27 +62,37 @@ export function GamePrizeRow({
     return n;
   };
 
-  const persist = async () => {
-    const nextExact = parseField(exactDraft);
-    const nextEasy = parseField(easyDraft);
+  /**
+   * Turn the raw draft into the payload value for the API:
+   * - Invalid input → 'invalid' (caller snaps back).
+   * - Empty OR equal to game default → null (deletes the override).
+   * - Anything else → the parsed integer (saves as override).
+   */
+  const toPayload = (
+    raw: string,
+    gameDefault: number | null,
+  ): number | null | 'invalid' => {
+    const parsed = parseField(raw);
+    if (parsed === 'invalid') return 'invalid';
+    if (parsed === null) return null;
+    if (parsed === gameDefault) return null;
+    return parsed;
+  };
 
-    // Invalid → snap back.
+  const persist = async () => {
+    const nextExact = toPayload(exactDraft, prize.exactDefault);
+    const nextEasy = toPayload(easyDraft, prize.easyDefault);
+
     if (nextExact === 'invalid') {
-      setExactDraft(
-        prize.overrideExact !== null ? String(prize.overrideExact) : '',
-      );
+      setExactDraft(initialExact);
       return;
     }
     if (nextEasy === 'invalid') {
-      setEasyDraft(
-        prize.overrideEasy !== null
-          ? String(prize.overrideEasy)
-          : '',
-      );
+      setEasyDraft(initialEasy);
       return;
     }
 
-    // No-op.
+    // No-op: neither override changed.
     if (
       nextExact === prize.overrideExact &&
       nextEasy === prize.overrideEasy
@@ -103,17 +114,24 @@ export function GamePrizeRow({
     }
   };
 
-  const exactDirty =
-    (prize.overrideExact !== null ? String(prize.overrideExact) : '') !==
-    exactDraft.trim();
-  const easyDirty =
-    (prize.overrideEasy !== null
-      ? String(prize.overrideEasy)
-      : '') !== easyDraft.trim();
+  const exactDirty = exactDraft.trim() !== initialExact;
+  const easyDirty = easyDraft.trim() !== initialEasy;
   const anyDirty = exactDirty || easyDirty;
 
-  // Games without a secondary default (Diaria, Fechas, Tica, etc.) don't
-  // show the second input — one less field for the operator to look past.
+  const resetToDefaults = () => {
+    setExactDraft(
+      prize.exactDefault !== null ? String(prize.exactDefault) : '',
+    );
+    setEasyDraft(
+      prize.easyDefault !== null ? String(prize.easyDefault) : '',
+    );
+    // Let the blur cascade handle the persist so we keep a single write path.
+    // Trigger it manually since state updates are batched.
+    setTimeout(persist, 0);
+  };
+
+  // Games without an easy default (Diaria, Fechas, Tica, etc.) don't show
+  // the second input — one less field for the operator to look past.
   const showEasy = prize.easyDefault !== null;
 
   const statusBadge =
@@ -140,16 +158,21 @@ export function GamePrizeRow({
           <div className="truncate text-sm font-semibold text-foreground">
             {prize.gameName}
           </div>
-          <div className="text-[11px] text-muted-foreground">
-            {prize.hasOverride ? (
-              <span className="font-semibold text-indigo-700">
-                Personalizado
-              </span>
-            ) : (
-              <>Default: {prize.exactDefault ?? '—'}x
-                {prize.easyDefault !== null &&
-                  ` / ${prize.easyDefault}x`}
-              </>
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>
+              Default: {prize.exactDefault ?? '—'}x
+              {prize.easyDefault !== null && ` / ${prize.easyDefault}x`}
+            </span>
+            {prize.hasOverride && (
+              <button
+                type="button"
+                onClick={resetToDefaults}
+                className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-500/20 hover:bg-indigo-500/20"
+                title="Restaurar al default del juego"
+              >
+                <RotateCcw className="size-3" strokeWidth={2.4} />
+                Restaurar default
+              </button>
             )}
           </div>
         </div>
@@ -163,8 +186,6 @@ export function GamePrizeRow({
         dirty={exactDirty}
         overridden={prize.overrideExact !== null}
         onBlur={persist}
-        // When there's no secondary field, the status badge lives on the
-        // main input so the operator always sees the save confirmation.
         rightBadge={!showEasy ? statusBadge : undefined}
       />
       {showEasy && (
@@ -180,7 +201,6 @@ export function GamePrizeRow({
         />
       )}
 
-      {/* Reserved slot for future action (delete override button, tooltip, etc.) */}
       {anyDirty && status === 'idle' && (
         <span
           className={cn(
