@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut, Menu, Ticket, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, X } from 'lucide-react';
 
 import { SidebarNav } from '@/app/layout/sidebar-nav';
 import { useSidebarStore } from '@/app/layout/sidebar-store';
@@ -97,10 +97,12 @@ function Topbar({
           <Menu className="size-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Ticket className="size-4" strokeWidth={2.4} />
-          </div>
-          <span className="text-sm font-black tracking-tight">Lotería</span>
+          <img
+            src="/logo.png"
+            alt="LM NICA"
+            className="size-8 rounded-md object-cover shadow-sm"
+          />
+          <span className="text-sm font-black tracking-tight">LM NICA</span>
         </div>
 
         <UserMenu name={name} role={role} onLogout={onLogout} />
@@ -203,12 +205,15 @@ function UserMenu({
 function SidebarHeader({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex h-16 items-center gap-3 border-b border-border px-5">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <Ticket className="size-5" strokeWidth={2.4} />
-      </div>
+      <img
+        src="/logo.png"
+        alt="LM NICA"
+        className="size-10 shrink-0 rounded-lg object-cover shadow-sm"
+      />
+
       <div className="min-w-0 flex-1">
         <div className="text-sm font-black leading-tight tracking-tight">
-          Lotería
+          LM NICA
         </div>
         <div className="text-xs text-muted-foreground leading-tight">
           Panel de administración

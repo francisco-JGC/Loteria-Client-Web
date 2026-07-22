@@ -37,9 +37,14 @@ export function LoginPage() {
         onSubmit={onSubmit}
         className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm space-y-4"
       >
-        <div className="text-center space-y-1">
+        <div className="flex flex-col items-center space-y-2">
+          <img
+            src="/logo.png"
+            alt="LM NICA"
+            className="size-20 rounded-xl object-cover shadow-md"
+          />
           <h1 className="text-2xl font-black tracking-tight">
-            Lotería <span className="text-primary">Admin</span>
+            LM NICA <span className="text-primary">Admin</span>
           </h1>
           <p className="text-sm text-muted-foreground">
             Ingresa con tus credenciales de administrador
